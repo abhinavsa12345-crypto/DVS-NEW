@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVS Manager — Doctor Value Scoring & Field Force Planning</title>
+<style>
+:root{
+  --bg:#0b1020; --panel:#121a33; --panel2:#0e1730; --line:#24304f; --line2:#2f3d63;
+  --txt:#e8edf9; --mut:#94a3c4; --dim:#6b7a9e;
+  --plat:#c9d6e8; --gold:#e0b23c; --silv:#9aa8bd; --brz:#b5723a;
+  --acc:#4f8cff; --acc2:#22d3a6; --warn:#f5a524; --err:#f2545b; --ok:#22c55e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+
+/* ---------- shell ---------- */
+header{background:linear-gradient(180deg,#101731,#0d1329);border-bottom:1px solid var(--line);padding:13px 22px;position:sticky;top:0;z-index:60}
+.hwrap{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-size:17px;font-weight:750;letter-spacing:-.3px}
+.brand span{color:var(--acc)}
+.badge{font-size:10px;padding:3px 9px;border-radius:20px;background:#1b2748;border:1px solid var(--line2);color:var(--mut);letter-spacing:.4px;text-transform:uppercase;font-weight:700}
+.spacer{flex:1}
+.hbtn{background:#1b2542;border:1px solid var(--line2);color:var(--txt);padding:7px 13px;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:600;white-space:nowrap}
+.hbtn:hover{background:#243158;border-color:var(--acc)}
+.hbtn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.hbtn.p:hover{background:#3d7bef}
+
+nav{background:#0e1428;border-bottom:1px solid var(--line);padding:0 22px;position:sticky;top:56px;z-index:55;overflow-x:auto}
+.nwrap{max-width:1560px;margin:0 auto;display:flex;gap:2px}
+.tab{padding:11px 17px;cursor:pointer;font-size:13.5px;font-weight:650;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--txt)}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tab .ct{font-size:10.5px;background:#1e2947;padding:1px 6px;border-radius:10px;margin-left:6px;color:var(--mut)}
+.tab.on .ct{background:var(--acc);color:#fff}
+
+main{max-width:1560px;margin:0 auto;padding:20px 22px 60px}
+.page{display:none} .page.on{display:block}
+
+/* ---------- primitives ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:3px;letter-spacing:-.1px}
+.card h3{font-size:13px;margin:16px 0 8px;color:var(--txt)}
+.sub{font-size:12px;color:var(--mut);margin-bottom:14px;line-height:1.55}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)} .g5{grid-template-columns:repeat(5,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.g21{grid-template-columns:2fr 1fr} .g12{grid-template-columns:1fr 2fr} .g11{grid-template-columns:1fr 1.35fr}
+@media(max-width:1250px){.g5,.g6{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1050px){.g3,.g21,.g12,.g11{grid-template-columns:1fr}}
+@media(max-width:760px){.g2,.g4,.g5,.g6{grid-template-columns:1fr}}
+
+.kpi{background:linear-gradient(160deg,#141d38,#111830);border:1px solid var(--line);border-radius:10px;padding:14px}
+.kpi .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;font-weight:750}
+.kpi .v{font-size:25px;font-weight:750;margin:5px 0 2px;letter-spacing:-.7px;line-height:1.1}
+.kpi .d{font-size:11.5px;color:var(--mut)}
+.kpi.ok .v{color:var(--ok)} .kpi.warn .v{color:var(--warn)} .kpi.err .v{color:var(--err)}
+.kpi.acc .v{color:var(--acc)} .kpi.acc2 .v{color:var(--acc2)}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:9px 10px;background:#161f3c;color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--line2);font-weight:750;position:sticky;top:0;z-index:2;white-space:nowrap}
+th.srt{cursor:pointer;user-select:none} th.srt:hover{color:var(--txt)}
+td{padding:8px 10px;border-bottom:1px solid #1b2440;vertical-align:middle}
+tbody tr:hover{background:#161f3c}
+.num{text-align:right;font-family:"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.tblwrap{max-height:600px;overflow:auto;border:1px solid var(--line);border-radius:9px}
+.empty{text-align:center;padding:46px 20px;color:var(--dim);font-size:13px}
+.empty b{display:block;color:var(--mut);font-size:15px;margin-bottom:7px}
+
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:800;letter-spacing:.3px;white-space:nowrap}
+.p-PLATINUM{background:#243449;color:#d3e3f7;border:1px solid #3d5a7d}
+.p-GOLD{background:#3d3211;color:#f0cf72;border:1px solid #6b5715}
+.p-SILVER{background:#2a3040;color:#c3ccdb;border:1px solid #47506a}
+.p-BRONZE{background:#3a2415;color:#d99b62;border:1px solid #6b4526}
+.tag{display:inline-block;padding:1.5px 7px;border-radius:5px;font-size:10px;font-weight:700;background:#1e2947;color:var(--mut);border:1px solid var(--line2)}
+.tag.on{background:#0f2f1e;color:#4ade80;border-color:#1d5136}
+.tag.off{background:#3a1418;color:#ff8b91;border-color:#6b2027}
+
+label{display:block;font-size:11px;color:var(--mut);margin-bottom:5px;font-weight:650;letter-spacing:.2px}
+input,select,textarea{width:100%;background:#0c1326;border:1px solid var(--line2);color:var(--txt);padding:8px 10px;border-radius:7px;font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+input[type=range]{padding:0;height:6px;-webkit-appearance:none;background:#1e2947;border:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid #0b1020}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid #0b1020}
+input.err{border-color:var(--err)}
+.fld{margin-bottom:12px}
+.fld .hint{font-size:10.5px;color:var(--dim);margin-top:4px}
+.btn{background:var(--acc);border:none;color:#fff;padding:9px 16px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:650}
+.btn:hover{background:#3d7bef}
+.btn.g{background:#1e2947;border:1px solid var(--line2);color:var(--txt)}
+.btn.g:hover{background:#28345a}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn.xs{padding:4px 9px;font-size:11px}
+.btn.d{background:#3a1620;border:1px solid #6b2130;color:#ff9aa5}
+.btn.d:hover{background:#4d1d2a}
+.btn.ok{background:var(--acc2);color:#04241c}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.rowflex{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.hide{display:none!important}
+
+.note{border-left:3px solid var(--acc);background:#111a33;padding:11px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--mut);margin:12px 0;line-height:1.6}
+.note.w{border-color:var(--warn);background:#2a2110}
+.note.e{border-color:var(--err);background:#2a1418}
+.note.o{border-color:var(--ok);background:#0f2418}
+.note b{color:var(--txt)}
+
+.fx{background:#0c1326;border:1px solid var(--line2);border-radius:8px;padding:13px 15px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;line-height:1.85;color:#a8e6d0;overflow-x:auto;white-space:pre}
+.fx .c{color:var(--dim)} .fx .v{color:var(--gold)}
+
+.bar{height:7px;background:#1b2440;border-radius:5px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:5px;transition:width .3s}
+canvas{max-width:100%;width:100%;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* ---------- modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(4,8,18,.78);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:34px 18px;overflow-y:auto;backdrop-filter:blur(3px)}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:13px;width:100%;max-width:940px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.modal.sm{max-width:520px}
+.mhead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--panel);border-radius:13px 13px 0 0;z-index:3}
+.mhead h3{font-size:16px;font-weight:700;margin:0}
+.mbody{padding:20px}
+.mfoot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;position:sticky;bottom:0;background:var(--panel);border-radius:0 0 13px 13px}
+.x{background:none;border:none;color:var(--mut);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.x:hover{color:var(--txt)}
+
+.toast{position:fixed;bottom:22px;right:22px;background:#1a2440;border:1px solid var(--acc);padding:12px 18px;border-radius:9px;z-index:300;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:380px}
+.toast.err{border-color:var(--err)} .toast.ok{border-color:var(--ok)}
+
+/* ---------- pillar sliders ---------- */
+.pill-row{background:#0e1730;border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:10px}
+.pill-row .top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.pill-row .nm{font-size:13px;font-weight:650;flex:1}
+.pill-row .wt{font-size:10.5px;color:var(--acc);font-weight:700;background:#152449;padding:2px 8px;border-radius:12px}
+.pill-row .sc{font-size:19px;font-weight:750;min-width:30px;text-align:right;font-family:"SF Mono",Menlo,monospace}
+.pill-row .anch{font-size:11px;color:var(--dim);margin-top:6px;min-height:15px}
+.pill-row .contrib{font-size:11px;color:var(--acc2);font-weight:650}
+
+.seg{display:flex;gap:0;border:1px solid var(--line2);border-radius:7px;overflow:hidden}
+.seg button{flex:1;background:#0c1326;border:none;color:var(--mut);padding:7px 4px;font-size:12px;cursor:pointer;font-weight:600;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--acc);color:#fff}
+.seg button:hover:not(.on){background:#1a2440;color:var(--txt)}
+
+.mrcard{background:#0e1730;border:1px solid var(--line);border-radius:10px;padding:15px;transition:border-color .15s}
+.mrcard:hover{border-color:var(--line2)}
+.mrcard .hd{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.mrcard .av{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#2a3f6b,#1d2d52);display:flex;align-items:center;justify-content:center;font-weight:750;font-size:14px;color:#bcd0f0;flex-shrink:0}
+.mrcard .nm{font-size:14px;font-weight:700;line-height:1.25}
+.mrcard .cd{font-size:11px;color:var(--dim);font-family:"SF Mono",Menlo,monospace}
+.mrstat{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:11px 0}
+.mrstat div{background:#0b1428;border:1px solid var(--line);border-radius:7px;padding:7px 8px;text-align:center}
+.mrstat .n{font-size:16px;font-weight:750;line-height:1.2}
+.mrstat .t{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;font-weight:700}
+
+a{color:var(--acc);text-decoration:none} a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:#0b1020}
+::-webkit-scrollbar-thumb{background:#28345a;border-radius:6px;border:2px solid #0b1020}
+::-webkit-scrollbar-thumb:hover{background:#35447a}
+
+@media print{
+  header,nav,.hbtn,button,.mask{display:none!important}
+  body{background:#fff;color:#000}
+  .page{display:block!important}
+  .card{border:1px solid #ccc;background:#fff;page-break-inside:avoid}
+  .kpi .v,.card h2,td,th,b{color:#000!important}
+  .tblwrap{max-height:none;overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<header><div class="hwrap">
+  <div class="brand">DVS <span>Manager</span></div>
+  <span class="badge" id="saveBadge">Saved</span>
+  <div class="spacer"></div>
+  <button class="hbtn g" onclick="openImport()">Import</button>
+  <button class="hbtn g" onclick="exportMenu()">Export</button>
+  <button class="hbtn g" onclick="loadDemo()">Load Sample Data</button>
+  <button class="hbtn p" onclick="openDoctor()">+ Add Doctor</button>
+</div></header>
+
+<nav><div class="nwrap">
+  <div class="tab on" data-p="dash">Overview</div>
+  <div class="tab" data-p="calc">DVS Calculator</div>
+  <div class="tab" data-p="docs">Doctors <span class="ct" id="ctDoc">0</span></div>
+  <div class="tab" data-p="mrs">Medical Reps <span class="ct" id="ctMR">0</span></div>
+  <div class="tab" data-p="settings">Settings</div>
+</div></nav>
+
+<main>
+
+<!-- ══════════════ OVERVIEW ══════════════ -->
+<section class="page on" id="p-dash">
+  <div class="card">
+    <h2>Overview</h2>
+    <div class="sub">Live summary of your doctor universe and field force. Every figure recalculates as you add or edit records.</div>
+    <div class="grid g5" id="kpis"></div>
+  </div>
+
+  <div class="grid g11">
+    <div class="card">
+      <h2>Tier Distribution</h2>
+      <div class="sub">Doctors grouped by Doctor Value Score. Click a tier to filter the doctor list.</div>
+      <div class="tblwrap" style="max-height:none"><table>
+        <thead><tr><th>Tier</th><th>DVS Band</th><th class="num">Doctors</th><th class="num">% of Universe</th>
+          <th class="num">Avg DVS</th><th class="num">Visits/Month</th></tr></thead>
+        <tbody id="tierTbl"></tbody>
+      </table></div>
+      <canvas id="tierChart" style="height:190px;margin-top:14px" height="190"></canvas>
+    </div>
+    <div class="card">
+      <h2>DVS Distribution</h2>
+      <div class="sub">Spread of composite scores across all scored doctors, with tier thresholds marked.</div>
+      <canvas id="hist" style="height:250px" height="250"></canvas>
+      <div class="legend" id="histLegend"></div>
+    </div>
+  </div>
+
+  <div class="grid g11">
+    <div class="card">
+      <h2>Field Force Capacity</h2>
+      <div class="sub">Whether your call plan actually fits the representatives you have.</div>
+      <div class="grid g4" id="capKpis"></div>
+      <canvas id="capChart" style="height:150px;margin-top:14px" height="150"></canvas>
+      <div id="capVerdict"></div>
+    </div>
+    <div class="card">
+      <h2>Workload by Representative</h2>
+      <div class="sub">Assigned doctors and monthly visit load per MR. Unassigned doctors are listed at the bottom.</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Representative</th><th class="num">Plat</th><th class="num">Gold</th><th class="num">Silv</th>
+          <th class="num">Brz</th><th class="num">Doctors</th><th class="num">Visits/Mo</th><th class="num">Capacity</th><th>Utilisation</th></tr></thead>
+        <tbody id="mrLoadTbl"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CALCULATOR ══════════════ -->
+<section class="page" id="p-calc">
+  <div class="grid g11">
+    <div class="card">
+      <h2>DVS Calculator</h2>
+      <div class="sub">Move the sliders or type a score. The composite Doctor Value Score, tier, call plan and budget entitlement update instantly. Save the result as a doctor record when you're done.</div>
+      <div id="pillarBox"></div>
+      <div class="rowflex" style="margin-top:15px">
+        <button class="btn" onclick="saveCalcAsDoctor()">Save as Doctor Record</button>
+        <button class="btn g" onclick="resetCalc()">Reset to 5s</button>
+        <button class="btn g" onclick="randomCalc()">Random Example</button>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Result</h2>
+        <div class="grid g4" id="calcKpis"></div>
+        <h3>Calculation</h3>
+        <div class="fx" id="calcWork"></div>
+      </div>
+      <div class="card">
+        <h2>Contribution by Pillar</h2>
+        <div class="sub">How much each pillar adds to the final score, and how much headroom is left.</div>
+        <canvas id="waterfall" style="height:225px" height="225"></canvas>
+      </div>
+      <div class="card">
+        <h2>Scoring Guide</h2>
+        <div class="sub">Reference anchors for each pillar. Click any row to apply that score.</div>
+        <div id="guide"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DOCTORS ══════════════ -->
+<section class="page" id="p-docs">
+  <div class="card">
+    <h2>Doctor Records</h2>
+    <div class="sub">Add, edit and delete doctors. Click any row to open the full record. Sort by clicking a column header.</div>
+    <div class="rowflex" style="margin-bottom:13px">
+      <input id="dSearch" placeholder="Search name, specialty, city, hospital…" style="width:270px" oninput="renderDocs()">
+      <select id="dTier" style="width:auto" onchange="renderDocs()">
+        <option value="">All tiers</option><option>PLATINUM</option><option>GOLD</option><option>SILVER</option><option>BRONZE</option>
+      </select>
+      <select id="dMR" style="width:auto" onchange="renderDocs()"><option value="">All reps</option></select>
+      <select id="dSpec" style="width:auto" onchange="renderDocs()"><option value="">All specialties</option></select>
+      <div class="spacer"></div>
+      <span class="sub" style="margin:0" id="dCount"></span>
+      <button class="btn sm" onclick="openDoctor()">+ Add Doctor</button>
+      <button class="btn g sm" onclick="bulkAssign()">Bulk Assign MR</button>
+      <button class="btn d sm" onclick="clearDocs()">Clear All</button>
+    </div>
+    <div class="tblwrap"><table>
+      <thead><tr>
+        <th class="srt" data-s="name">Doctor</th><th class="srt" data-s="spec">Specialty</th>
+        <th class="srt" data-s="city">City</th><th class="srt" data-s="mrId">Rep</th>
+        <th class="num srt" data-s="p1">P1</th><th class="num srt" data-s="p2">P2</th>
+        <th class="num srt" data-s="p3">P3</th><th class="num srt" data-s="p4">P4</th>
+        <th class="num srt" data-s="p5">P5</th>
+        <th class="num srt" data-s="dvs">DVS</th><th class="srt" data-s="tier">Tier</th>
+        <th class="num">Visits/Mo</th><th style="text-align:right">Actions</th>
+      </tr></thead>
+      <tbody id="docTbl"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ══════════════ MRs ══════════════ -->
+<section class="page" id="p-mrs">
+  <div class="card">
+    <h2>Medical Representatives</h2>
+    <div class="sub">Manage your field force. Each rep's capacity is calculated from their working days and calls per day, then compared against the visit load of the doctors assigned to them.</div>
+    <div class="rowflex" style="margin-bottom:13px">
+      <input id="mSearch" placeholder="Search name, code, territory…" style="width:260px" oninput="renderMRs()">
+      <select id="mStatus" style="width:auto" onchange="renderMRs()">
+        <option value="">All statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option>
+      </select>
+      <div class="spacer"></div>
+      <span class="sub" style="margin:0" id="mCount"></span>
+      <button class="btn sm" onclick="openMR()">+ Add Representative</button>
+      <button class="btn g sm" onclick="autoAssign()">Auto-Assign Doctors</button>
+      <button class="btn d sm" onclick="clearMRs()">Clear All</button>
+    </div>
+    <div class="grid g3" id="mrGrid"></div>
+  </div>
+</section>
+
+<!-- ══════════════ SETTINGS ══════════════ -->
+<section class="page" id="p-settings">
+  <div class="grid g2">
+    <div class="card">
+      <h2>Pillar Weights</h2>
+      <div class="sub">The five weights must total 100%. Changing them re-scores every doctor in your database immediately.</div>
+      <div id="wBox"></div>
+      <div id="wWarn"></div>
+      <div class="rowflex" style="margin-top:12px">
+        <button class="btn" onclick="applyWeights()">Apply &amp; Re-score All</button>
+        <button class="btn g" onclick="resetWeights()">Reset to Defaults</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Tier Thresholds &amp; Call Plan</h2>
+      <div class="sub">Set the DVS band, monthly visit frequency and quarterly budget share for each tier. Bands use half-open intervals so every possible score falls into exactly one tier.</div>
+      <div class="tblwrap" style="max-height:none"><table>
+        <thead><tr><th>Tier</th><th class="num">Min DVS</th><th class="num">Visits/Month</th><th class="num">Budget Share %</th></tr></thead>
+        <tbody id="tierCfg"></tbody>
+      </table></div>
+      <div id="tierWarn"></div>
+      <div class="rowflex" style="margin-top:12px">
+        <button class="btn" onclick="applyTiers()">Apply &amp; Re-score All</button>
+        <button class="btn g" onclick="resetTiers()">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <h2>Budget &amp; Capacity Defaults</h2>
+      <div class="fld"><label>Quarterly promotional budget (₹)</label>
+        <input type="number" id="sBudget" value="3000000" oninput="setBudget()"></div>
+      <div class="fld"><label>Default working days per month</label>
+        <input type="number" id="sDays" value="22" oninput="setDefaults()"></div>
+      <div class="fld"><label>Default calls per day</label>
+        <input type="number" id="sCalls" value="9" oninput="setDefaults()"></div>
+      <div class="note">These defaults apply to new representatives. Each rep can override them on their own record.</div>
+    </div>
+    <div class="card">
+      <h2>Specialties &amp; Data</h2>
+      <div class="fld"><label>Specialty list (one per line) — used in the doctor dropdown</label>
+        <textarea id="sSpecs" rows="7" oninput="setSpecs()"></textarea></div>
+      <h3>Data Management</h3>
+      <div class="rowflex">
+        <button class="btn g sm" onclick="exportJSON()">Backup (JSON)</button>
+        <button class="btn g sm" onclick="openImport()">Restore / Import</button>
+        <button class="btn g sm" onclick="exportDoctorsCSV()">Doctors CSV</button>
+        <button class="btn g sm" onclick="exportMRsCSV()">Reps CSV</button>
+        <button class="btn d sm" onclick="wipeAll()">Erase Everything</button>
+      </div>
+      <div class="note" style="margin-top:14px">All data is stored in this browser only. Nothing is uploaded anywhere. Use <b>Backup</b> before clearing your browser data or switching machines.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div id="modalHost"></div>
+
+<script>
+/* ============================================================================
+   DVS MANAGER — core state, scoring engine and persistence.
+   All data lives in the browser (localStorage). No network calls.
+   ========================================================================== */
+
+const DEFAULT_PILLARS = [
+  {k:'p1', n:'Prescription Potential', w:0.30, short:'Rx Potential',
+   q:'How many relevant prescriptions can this doctor generate for our molecule?',
+   anchors:[[10,'80+ relevant patients per month'],[8,'50–79 relevant patients'],
+            [6,'30–49 relevant patients'],[4,'15–29 relevant patients'],[2,'Below 15 relevant patients']],
+   tip:'Score on patients with the TARGET condition, not total footfall.'},
+  {k:'p2', n:'Adoption Propensity', w:0.25, short:'Adoption',
+   q:'How likely is this doctor to actually prescribe a NEW molecule?',
+   anchors:[[10,'Early adopter — tries new molecules within 3 months'],[7,'Early majority — adopts after peer evidence (3–6 mo)'],
+            [4,'Late majority — waits until well established (6–12 mo)'],[2,'Laggard / loyalist — rarely switches brand']],
+   tip:'A medium-volume early adopter beats a high-volume laggard in a launch.'},
+  {k:'p3', n:'Influence & Network Power', w:0.20, short:'Influence',
+   q:'Does this doctor influence other doctors\u2019 prescribing behaviour?',
+   anchors:[[10,'Regional/national KOL, professor, association leader'],[7,'Local influencer, conference speaker, mentors juniors'],
+            [5,'Moderate peer influence, respected locally'],[2,'Solo practitioner, limited network']],
+   tip:'Converting an opinion leader multiplies reach beyond their own clinic.'},
+  {k:'p4', n:'Accessibility', w:0.15, short:'Access',
+   q:'How easy is it to reach and meaningfully engage this doctor?',
+   anchors:[[10,'Easily accessible, welcomes reps, gives good time'],[7,'Moderately accessible at specific times'],
+            [4,'Difficult but reachable via alternative channels'],[1,'Virtually inaccessible, refuses meetings']],
+   tip:'High value but score 1 here? Change the channel, don\u2019t waste the opportunity.'},
+  {k:'p5', n:'Competitive Vulnerability', w:0.10, short:'Competitive',
+   q:'How entrenched is the competition, and can we break through?',
+   anchors:[[10,'Dissatisfied with current options, actively seeking alternatives'],[7,'Moderate competitor presence, open to better options'],
+            [4,'Strong competitor presence but not locked in'],[1,'Competitor champion — advisory board member']],
+   tip:'Share of voice is the standard field proxy for entrenchment.'}
+];
+
+const DEFAULT_TIERS = [
+  {n:'PLATINUM', min:8.0, freq:3.5,  split:45, col:'#c9d6e8', role:'Build the brand'},
+  {n:'GOLD',     min:6.0, freq:2.0,  split:28, col:'#e0b23c', role:'Grow the brand'},
+  {n:'SILVER',   min:4.0, freq:1.0,  split:15, col:'#9aa8bd', role:'Sustain prescriptions'},
+  {n:'BRONZE',   min:0.0, freq:0.33, split:12, col:'#b5723a', role:'Digital engagement'}
+];
+
+const DEFAULT_SPECS = ['Cardiologist','Diabetologist','General Physician','Consulting Physician',
+  'Nephrologist','Endocrinologist','Internal Medicine','Orthopaedic','Neurologist','Paediatrician',
+  'Gastroenterologist','Pulmonologist','Dermatologist','Gynaecologist','Psychiatrist','Family Physician'];
+
+let PILLARS = JSON.parse(JSON.stringify(DEFAULT_PILLARS));
+let TIERS   = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+let SPECS   = DEFAULT_SPECS.slice();
+let DOCS = [], MRS = [];
+let CFG = {budget:3000000, days:22, calls:9};
+let SORT = {k:'dvs', dir:-1};
+let CALC = {p1:5,p2:5,p3:5,p4:5,p5:5};
+
+const $ = id => document.getElementById(id);
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R  = n => '₹' + Math.round(n||0).toLocaleString('en-IN');
+const L  = n => '₹' + ((n||0)/100000).toFixed(2) + 'L';
+const pc = n => (isFinite(n)? (n*100).toFixed(1) : '0.0') + '%';
+
+/* ---- FORMULA: DVS = Σ (weightᵢ × scoreᵢ), weights sum to 1 ---- */
+function calcDVS(d){
+  let s = 0;
+  for(const p of PILLARS) s += (+d[p.k]||0) * p.w;
+  return Math.round(s*10000)/10000;
+}
+/* ---- Tier lookup: highest tier whose minimum the score meets ---- */
+function tierOf(dvs){
+  const sorted = TIERS.slice().sort((a,b)=>b.min-a.min);
+  for(const t of sorted) if(dvs >= t.min) return t.n;
+  return sorted[sorted.length-1].n;
+}
+function tierObj(n){ return TIERS.find(t=>t.n===n) || TIERS[TIERS.length-1]; }
+function tierMax(t){
+  const higher = TIERS.filter(x=>x.min>t.min).sort((a,b)=>a.min-b.min)[0];
+  return higher ? higher.min : 10.01;
+}
+function rescore(d){ d.dvs = calcDVS(d); d.tier = tierOf(d.dvs); return d; }
+function rescoreAll(){ DOCS.forEach(rescore); }
+
+function visitsFor(d){ return tierObj(d.tier).freq; }
+function counts(){
+  const c = {}; TIERS.forEach(t=>c[t.n]=0);
+  DOCS.forEach(d=>{ if(c[d.tier]!=null) c[d.tier]++; });
+  return c;
+}
+function totalDemand(){ return DOCS.reduce((a,d)=>a+visitsFor(d),0); }
+function mrCapacity(m){ return (+m.days||CFG.days) * (+m.calls||CFG.calls); }
+function totalCapacity(){ return MRS.filter(m=>m.active!==false).reduce((a,m)=>a+mrCapacity(m),0); }
+function mrLoad(id){
+  const list = DOCS.filter(d=>d.mrId===id);
+  const o = {docs:list.length, visits:0}; TIERS.forEach(t=>o[t.n]=0);
+  list.forEach(d=>{ o.visits += visitsFor(d); if(o[d.tier]!=null) o[d.tier]++; });
+  return o;
+}
+function budgetPerDoctor(tierName){
+  const c = counts()[tierName] || 0;
+  if(!c) return 0;
+  const totalSplit = TIERS.reduce((a,t)=>a+(+t.split||0),0) || 100;
+  return (tierObj(tierName).split/totalSplit) * CFG.budget / c;
+}
+function mrName(id){ const m = MRS.find(x=>x.id===id); return m ? m.name : null; }
+
+/* ---------- persistence ---------- */
+const KEY = 'dvsmgr_v1';
+let saveTimer = null;
+function persist(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify({
+      docs:DOCS, mrs:MRS, cfg:CFG, specs:SPECS,
+      pillars:PILLARS.map(p=>({k:p.k,w:p.w})),
+      tiers:TIERS.map(t=>({n:t.n,min:t.min,freq:t.freq,split:t.split})),
+      v:1, ts:Date.now()
+    }));
+    flashSaved();
+  }catch(e){ toast('Could not save — browser storage may be full','err'); }
+}
+function flashSaved(){
+  const b = $('saveBadge'); if(!b) return;
+  b.textContent = 'Saving…'; b.style.color = 'var(--warn)';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ b.textContent = 'Saved'; b.style.color = ''; }, 420);
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(KEY); if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(s.pillars) s.pillars.forEach(sp=>{ const p = PILLARS.find(x=>x.k===sp.k); if(p) p.w = sp.w; });
+    if(s.tiers && s.tiers.length) TIERS = s.tiers.map(st=>{
+      const d = DEFAULT_TIERS.find(x=>x.n===st.n) || {};
+      return Object.assign({}, d, st);
+    });
+    if(s.specs && s.specs.length) SPECS = s.specs;
+    if(s.cfg) CFG = Object.assign(CFG, s.cfg);
+    DOCS = (s.docs||[]).map(rescore);
+    MRS  = s.mrs||[];
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------- toast ---------- */
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind? ' '+kind : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3200);
+}
+
+/* ---------- validation ---------- */
+function validScore(v){ const n = +v; return isFinite(n) && n >= 0 && n <= 10; }
+</script>
+
+<script>
+/* ============================ TABS ============================ */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); $('p-'+t.dataset.p).classList.add('on');
+  renderAll();
+});
+function goTab(p){ const t = document.querySelector(`.tab[data-p="${p}"]`); if(t) t.click(); }
+
+function kpi(l,v,d,cls){
+  return `<div class="kpi ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d||''}</div></div>`;
+}
+
+/* ============================ CALCULATOR ============================ */
+function buildCalc(){
+  $('pillarBox').innerHTML = PILLARS.map(p=>`
+    <div class="pill-row">
+      <div class="top">
+        <span class="nm">${p.n}</span>
+        <span class="wt">${(p.w*100).toFixed(0)}%</span>
+        <span class="sc" id="sc_${p.k}">5</span>
+      </div>
+      <input type="range" id="rg_${p.k}" min="0" max="10" step="1" value="5"
+             oninput="setCalc('${p.k}', this.value)">
+      <div class="anch" id="an_${p.k}"></div>
+      <div class="contrib" id="cn_${p.k}"></div>
+    </div>`).join('');
+
+  $('guide').innerHTML = PILLARS.map(p=>`
+    <div style="margin-bottom:14px">
+      <div style="font-size:12.5px;font-weight:650;margin-bottom:2px">${p.n}
+        <span style="color:var(--acc);font-size:11px">weight ${(p.w*100).toFixed(0)}%</span></div>
+      <div style="font-size:11.5px;color:var(--dim);margin-bottom:6px">${p.q}</div>
+      <table style="font-size:11.5px">
+        ${p.anchors.map(a=>`<tr style="cursor:pointer" onclick="setCalc('${p.k}',${a[0]},true)">
+          <td style="padding:4px 8px">${a[1]}</td>
+          <td class="num" style="padding:4px 8px;width:40px"><b style="color:var(--acc)">${a[0]}</b></td></tr>`).join('')}
+      </table>
+      <div style="font-size:11px;color:var(--warn);margin-top:5px">${p.tip}</div>
+    </div>`).join('');
+}
+
+function setCalc(k, v, sync){
+  CALC[k] = Math.max(0, Math.min(10, Math.round(+v)));
+  if(sync && $('rg_'+k)) $('rg_'+k).value = CALC[k];
+  renderCalc();
+}
+function resetCalc(){ PILLARS.forEach(p=>CALC[p.k]=5); syncCalcInputs(); renderCalc(); }
+function randomCalc(){
+  PILLARS.forEach(p=>{
+    const vals = p.anchors.map(a=>a[0]);
+    CALC[p.k] = vals[Math.floor(Math.random()*vals.length)];
+  });
+  syncCalcInputs(); renderCalc();
+}
+function syncCalcInputs(){ PILLARS.forEach(p=>{ const r = $('rg_'+p.k); if(r) r.value = CALC[p.k]; }); }
+
+function renderCalc(){
+  if(!$('pillarBox')) return;
+  let total = 0;
+  PILLARS.forEach(p=>{
+    const v = CALC[p.k]||0, c = v*p.w; total += c;
+    if($('sc_'+p.k)) $('sc_'+p.k).textContent = v;
+    if($('cn_'+p.k)) $('cn_'+p.k).textContent = `${v} × ${p.w.toFixed(2)} = ${c.toFixed(3)} points`;
+    const a = p.anchors.slice().sort((x,y)=>Math.abs(x[0]-v)-Math.abs(y[0]-v))[0];
+    if($('an_'+p.k)) $('an_'+p.k).textContent = a ? '≈ ' + a[1] : '';
+  });
+  total = Math.round(total*10000)/10000;
+  const tn = tierOf(total), to = tierObj(tn);
+  const per = budgetPerDoctor(tn);
+
+  $('calcKpis').innerHTML =
+    kpi('Doctor Value Score', total.toFixed(2), 'out of 10.00', 'acc') +
+    kpi('Tier', `<span class="pill p-${tn}" style="font-size:14px;padding:4px 12px">${tn}</span>`, to.role) +
+    kpi('Visits / Month', to.freq.toFixed(2), (to.freq*3).toFixed(1)+' per quarter') +
+    kpi('Budget / Quarter', per? R(per) : '—', per? 'based on current tier counts' : 'add doctors to compute', 'acc2');
+
+  const maxW = Math.max(...PILLARS.map(p=>p.n.length));
+  $('calcWork').innerHTML =
+    PILLARS.map(p=>`<span class="c">${esc(p.n.padEnd(maxW))}</span>  ${String(CALC[p.k]).padStart(2)} × <span class="v">${p.w.toFixed(2)}</span> = ${(CALC[p.k]*p.w).toFixed(4)}`).join('\n')
+    + `\n<span class="c">${'─'.repeat(maxW+22)}</span>\n`
+    + `<span class="c">${'COMPOSITE DVS'.padEnd(maxW+7)}</span>= <span class="v">${total.toFixed(4)}</span>   →  ${tn}`;
+
+  drawWaterfall();
+}
+
+function saveCalcAsDoctor(){
+  openDoctor(null, Object.assign({}, CALC));
+}
+
+/* ============================ DOCTOR FORM ============================ */
+function openDoctor(id, preset){
+  const d = id ? DOCS.find(x=>x.id===id) : null;
+  const v = d || Object.assign({name:'',spec:SPECS[0]||'',city:'',hospital:'',phone:'',email:'',
+    mrId:'',notes:'',p1:5,p2:5,p3:5,p4:5,p5:5}, preset||{});
+  const isEdit = !!d;
+
+  modal({
+    title: isEdit ? 'Edit Doctor' : 'Add Doctor',
+    badge: isEdit ? `<span class="pill p-${d.tier}" id="mTierBadge">${d.tier}</span>
+                     <span class="badge" id="mDvsBadge">DVS ${d.dvs.toFixed(2)}</span>` :
+                    `<span class="pill p-${tierOf(calcDVS(v))}" id="mTierBadge">${tierOf(calcDVS(v))}</span>
+                     <span class="badge" id="mDvsBadge">DVS ${calcDVS(v).toFixed(2)}</span>`,
+    body:`
+      <div class="grid g2">
+        <div>
+          <h3 style="margin-top:0">Profile</h3>
+          <div class="fld"><label>Doctor name *</label>
+            <input id="f_name" value="${esc(v.name)}" placeholder="Dr. Rajesh Kumar" autofocus></div>
+          <div class="grid g2">
+            <div class="fld"><label>Specialty</label>
+              <select id="f_spec">${SPECS.map(s=>`<option ${s===v.spec?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+            <div class="fld"><label>City / Area</label>
+              <input id="f_city" value="${esc(v.city)}" placeholder="Delhi"></div>
+          </div>
+          <div class="fld"><label>Hospital / Clinic</label>
+            <input id="f_hospital" value="${esc(v.hospital)}" placeholder="City Hospital"></div>
+          <div class="grid g2">
+            <div class="fld"><label>Phone</label><input id="f_phone" value="${esc(v.phone)}" placeholder="+91 …"></div>
+            <div class="fld"><label>Email</label><input id="f_email" value="${esc(v.email)}" placeholder="name@example.com"></div>
+          </div>
+          <div class="fld"><label>Assigned representative</label>
+            <select id="f_mrId"><option value="">— Unassigned —</option>
+              ${MRS.map(m=>`<option value="${m.id}" ${m.id===v.mrId?'selected':''}>${esc(m.name)}${m.code?' ('+esc(m.code)+')':''}</option>`).join('')}
+            </select></div>
+          <div class="fld"><label>Notes</label>
+            <textarea id="f_notes" rows="3" placeholder="Prescribing habits, preferences, next action…">${esc(v.notes)}</textarea></div>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Pillar Scores</h3>
+          <div id="mPillars">
+            ${PILLARS.map(p=>`
+              <div class="pill-row" style="padding:10px 12px;margin-bottom:8px">
+                <div class="top" style="margin-bottom:7px">
+                  <span class="nm" style="font-size:12.5px">${p.n}</span>
+                  <span class="wt">${(p.w*100).toFixed(0)}%</span>
+                  <input type="number" id="mv_${p.k}" min="0" max="10" step="1" value="${v[p.k]}"
+                         style="width:58px;padding:4px 7px;text-align:center;font-weight:700"
+                         oninput="mSync('${p.k}',this.value)">
+                </div>
+                <input type="range" id="mr_${p.k}" min="0" max="10" step="1" value="${v[p.k]}"
+                       oninput="mSync('${p.k}',this.value,1)">
+                <div class="anch" id="ma_${p.k}" style="font-size:10.5px"></div>
+              </div>`).join('')}
+          </div>
+          <div class="fx" id="mWork" style="font-size:11.5px;line-height:1.7"></div>
+        </div>
+      </div>`,
+    foot:`<button class="btn" onclick="saveDoctor('${id||''}')">${isEdit?'Save Changes':'Add Doctor'}</button>
+          <button class="btn g" onclick="closeModal()">Cancel</button>
+          ${isEdit?`<div class="spacer"></div><button class="btn d" onclick="delDoctor('${id}')">Delete</button>`:''}`
+  });
+  mUpdate();
+  setTimeout(()=>{ const el=$('f_name'); if(el) el.focus(); },60);
+}
+
+function mSync(k, val, fromRange){
+  const n = Math.max(0, Math.min(10, Math.round(+val||0)));
+  if($('mv_'+k) && !fromRange) { /* typed */ } else if($('mv_'+k)) $('mv_'+k).value = n;
+  if($('mr_'+k)) $('mr_'+k).value = n;
+  mUpdate();
+}
+function mRead(){
+  const o = {};
+  PILLARS.forEach(p=>{ o[p.k] = Math.max(0, Math.min(10, Math.round(+($('mv_'+p.k)||{}).value||0))); });
+  return o;
+}
+function mUpdate(){
+  if(!$('mWork')) return;
+  const s = mRead(), dvs = calcDVS(s), tn = tierOf(dvs);
+  PILLARS.forEach(p=>{
+    const a = p.anchors.slice().sort((x,y)=>Math.abs(x[0]-s[p.k])-Math.abs(y[0]-s[p.k]))[0];
+    if($('ma_'+p.k)) $('ma_'+p.k).textContent = a? '≈ '+a[1] : '';
+  });
+  const w = Math.max(...PILLARS.map(p=>p.short.length));
+  $('mWork').innerHTML = PILLARS.map(p=>
+    `<span class="c">${esc(p.short.padEnd(w))}</span> ${String(s[p.k]).padStart(2)} × ${p.w.toFixed(2)} = ${(s[p.k]*p.w).toFixed(3)}`).join('\n')
+    + `\n<span class="c">${'─'.repeat(w+18)}</span>\n<span class="c">${'DVS'.padEnd(w)}</span> <span class="v">${dvs.toFixed(3)}</span>  → ${tn}`;
+  const tb = $('mTierBadge'), db = $('mDvsBadge');
+  if(tb){ tb.className = 'pill p-'+tn; tb.textContent = tn; }
+  if(db) db.textContent = 'DVS ' + dvs.toFixed(2);
+}
+
+function saveDoctor(id){
+  const name = ($('f_name').value||'').trim();
+  if(!name){ $('f_name').classList.add('err'); toast('Doctor name is required','err'); $('f_name').focus(); return; }
+  const s = mRead();
+  const base = {
+    name, spec:$('f_spec').value, city:($('f_city').value||'').trim(),
+    hospital:($('f_hospital').value||'').trim(), phone:($('f_phone').value||'').trim(),
+    email:($('f_email').value||'').trim(), mrId:$('f_mrId').value,
+    notes:($('f_notes').value||'').trim()
+  };
+  Object.assign(base, s);
+  if(id){
+    const d = DOCS.find(x=>x.id===id);
+    Object.assign(d, base); rescore(d);
+    toast(`${d.name} updated — DVS ${d.dvs.toFixed(2)}, ${d.tier}`,'ok');
+  }else{
+    const d = rescore(Object.assign({id:uid('d'), created:Date.now()}, base));
+    DOCS.push(d);
+    toast(`${d.name} added — DVS ${d.dvs.toFixed(2)}, ${d.tier}`,'ok');
+  }
+  persist(); closeModal(); renderAll();
+}
+function delDoctor(id){
+  const d = DOCS.find(x=>x.id===id); if(!d) return;
+  confirmBox(`Delete ${esc(d.name)}?`, 'This removes the doctor record permanently.', ()=>{
+    DOCS = DOCS.filter(x=>x.id!==id);
+    persist(); closeModal(); renderAll(); toast('Doctor deleted');
+  });
+}
+
+/* ============================ MR FORM ============================ */
+function openMR(id){
+  const m = id ? MRS.find(x=>x.id===id) : null;
+  const v = m || {name:'',code:'',territory:'',phone:'',email:'',
+                  days:CFG.days, calls:CFG.calls, active:true, notes:''};
+  const isEdit = !!m;
+  const load = isEdit ? mrLoad(id) : null;
+
+  modal({
+    title: isEdit ? 'Edit Representative' : 'Add Representative',
+    badge: isEdit ? `<span class="tag ${m.active!==false?'on':'off'}">${m.active!==false?'Active':'Inactive'}</span>` : '',
+    sm:false,
+    body:`
+      <div class="grid g2">
+        <div>
+          <h3 style="margin-top:0">Details</h3>
+          <div class="fld"><label>Representative name *</label>
+            <input id="g_name" value="${esc(v.name)}" placeholder="Amit Sharma"></div>
+          <div class="grid g2">
+            <div class="fld"><label>Code</label><input id="g_code" value="${esc(v.code)}" placeholder="MR-1"></div>
+            <div class="fld"><label>Territory</label><input id="g_territory" value="${esc(v.territory)}" placeholder="South Delhi"></div>
+          </div>
+          <div class="grid g2">
+            <div class="fld"><label>Phone</label><input id="g_phone" value="${esc(v.phone)}" placeholder="+91 …"></div>
+            <div class="fld"><label>Email</label><input id="g_email" value="${esc(v.email)}" placeholder="name@example.com"></div>
+          </div>
+          <div class="fld"><label>Status</label>
+            <select id="g_active"><option value="1" ${v.active!==false?'selected':''}>Active</option>
+              <option value="0" ${v.active===false?'selected':''}>Inactive</option></select></div>
+          <div class="fld"><label>Notes</label>
+            <textarea id="g_notes" rows="2">${esc(v.notes)}</textarea></div>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Capacity</h3>
+          <div class="grid g2">
+            <div class="fld"><label>Working days / month</label>
+              <input type="number" id="g_days" min="1" max="31" value="${v.days}" oninput="gCap()"></div>
+            <div class="fld"><label>Calls / day</label>
+              <input type="number" id="g_calls" min="1" max="30" value="${v.calls}" oninput="gCap()"></div>
+          </div>
+          <div class="note" id="gCapOut"></div>
+          ${isEdit?`
+            <h3>Current Workload</h3>
+            <div class="mrstat">
+              ${TIERS.map(t=>`<div><div class="n" style="color:${t.col}">${load[t.n]}</div><div class="t">${t.n.slice(0,4)}</div></div>`).join('')}
+            </div>
+            <div class="grid g2">
+              ${kpi('Doctors assigned', load.docs, 'in this territory')}
+              ${kpi('Visits required', Math.round(load.visits), 'per month', load.visits > mrCapacity(m) ? 'err':'ok')}
+            </div>
+            <div class="note ${load.visits>mrCapacity(m)?'e':'o'}" style="margin-top:12px">
+              ${load.visits>mrCapacity(m)
+                ? `<b>Over capacity.</b> ${Math.round(load.visits)} visits required against ${mrCapacity(m)} available — reassign ${Math.ceil((load.visits-mrCapacity(m))/3)} or so doctors.`
+                : `<b>Within capacity.</b> ${Math.round(mrCapacity(m)-load.visits)} calls of headroom for chemists, hospitals and admin.`}
+            </div>`
+          :`<div class="note">Assign doctors to this representative from the doctor record, or use <b>Auto-Assign</b> on the Representatives tab once they're saved.</div>`}
+        </div>
+      </div>`,
+    foot:`<button class="btn" onclick="saveMR('${id||''}')">${isEdit?'Save Changes':'Add Representative'}</button>
+          <button class="btn g" onclick="closeModal()">Cancel</button>
+          ${isEdit?`<div class="spacer"></div><button class="btn d" onclick="delMR('${id}')">Delete</button>`:''}`
+  });
+  gCap();
+  setTimeout(()=>{ const el=$('g_name'); if(el) el.focus(); },60);
+}
+function gCap(){
+  if(!$('gCapOut')) return;
+  const d = +$('g_days').value||0, c = +$('g_calls').value||0;
+  $('gCapOut').innerHTML = `<b>Capacity: ${(d*c).toLocaleString('en-IN')} calls per month</b><br>
+    ${d} working days × ${c} calls per day  ·  ${(d*c*3).toLocaleString('en-IN')} per quarter`;
+}
+function saveMR(id){
+  const name = ($('g_name').value||'').trim();
+  if(!name){ $('g_name').classList.add('err'); toast('Representative name is required','err'); return; }
+  const base = {
+    name, code:($('g_code').value||'').trim(), territory:($('g_territory').value||'').trim(),
+    phone:($('g_phone').value||'').trim(), email:($('g_email').value||'').trim(),
+    days:Math.max(1,+$('g_days').value||CFG.days), calls:Math.max(1,+$('g_calls').value||CFG.calls),
+    active:$('g_active').value==='1', notes:($('g_notes').value||'').trim()
+  };
+  if(id){
+    Object.assign(MRS.find(x=>x.id===id), base);
+    toast(`${name} updated`,'ok');
+  }else{
+    MRS.push(Object.assign({id:uid('m'), created:Date.now()}, base));
+    toast(`${name} added`,'ok');
+  }
+  persist(); closeModal(); renderAll();
+}
+function delMR(id){
+  const m = MRS.find(x=>x.id===id); if(!m) return;
+  const n = DOCS.filter(d=>d.mrId===id).length;
+  confirmBox(`Delete ${esc(m.name)}?`,
+    n? `${n} doctor${n>1?'s':''} assigned to this representative will become unassigned.` : 'This representative has no doctors assigned.',
+    ()=>{
+      MRS = MRS.filter(x=>x.id!==id);
+      DOCS.forEach(d=>{ if(d.mrId===id) d.mrId=''; });
+      persist(); closeModal(); renderAll(); toast('Representative deleted');
+    });
+}
+
+/* ============================ MODAL PLUMBING ============================ */
+function modal(o){
+  $('modalHost').innerHTML = `
+    <div class="mask" onclick="if(event.target===this)closeModal()">
+      <div class="modal ${o.sm?'sm':''}">
+        <div class="mhead"><h3>${o.title}</h3>${o.badge||''}<div class="spacer"></div>
+          <button class="x" onclick="closeModal()">×</button></div>
+        <div class="mbody">${o.body}</div>
+        ${o.foot?`<div class="mfoot">${o.foot}</div>`:''}
+      </div></div>`;
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){ $('modalHost').innerHTML = ''; document.body.style.overflow = ''; }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+function confirmBox(title, msg, onYes){
+  const host = document.createElement('div');
+  host.innerHTML = `
+    <div class="mask" style="z-index:250" onclick="if(event.target===this)this.parentNode.remove()">
+      <div class="modal sm">
+        <div class="mhead"><h3>${title}</h3></div>
+        <div class="mbody"><div class="sub" style="margin:0">${msg}</div></div>
+        <div class="mfoot"><button class="btn d" id="cfYes">Yes, delete</button>
+          <button class="btn g" onclick="this.closest('.mask').parentNode.remove()">Cancel</button></div>
+      </div></div>`;
+  document.body.appendChild(host);
+  host.querySelector('#cfYes').onclick = ()=>{ host.remove(); onYes(); };
+}
+</script>
+
+<script>
+/* ============================ MASTER RENDER ============================ */
+function renderAll(){
+  $('ctDoc').textContent = DOCS.length;
+  $('ctMR').textContent  = MRS.length;
+  renderDash(); renderDocs(); renderMRs(); renderCalc(); syncSettings();
+}
+
+/* ============================ OVERVIEW ============================ */
+function renderDash(){
+  const c = counts(), n = DOCS.length;
+  const dem = totalDemand(), cap = totalCapacity();
+  const u = cap ? dem/cap : 0;
+  const hv = (c.PLATINUM||0) + (c.GOLD||0);
+  const avg = n ? DOCS.reduce((a,d)=>a+d.dvs,0)/n : 0;
+  const unassigned = DOCS.filter(d=>!d.mrId || !MRS.find(m=>m.id===d.mrId)).length;
+
+  $('kpis').innerHTML =
+    kpi('Doctors Scored', n.toLocaleString('en-IN'), n? `average DVS ${avg.toFixed(2)}` : 'no records yet', 'acc') +
+    kpi('High-Value Base', hv.toLocaleString('en-IN'), n? `${pc(hv/n)} of universe (Platinum + Gold)` : '—', 'acc2') +
+    kpi('Representatives', MRS.filter(m=>m.active!==false).length, `${MRS.length} total on file`) +
+    kpi('Field Utilisation', cap? pc(u) : '—', cap? `${Math.round(dem)} of ${cap.toLocaleString('en-IN')} calls/mo` : 'add representatives',
+        !cap?'':(u>1?'err':u>0.85?'warn':'ok')) +
+    kpi('Unassigned Doctors', unassigned, unassigned? 'need a representative' : 'all doctors assigned',
+        unassigned? 'warn':'ok');
+
+  $('tierTbl').innerHTML = TIERS.map(t=>{
+    const cnt = c[t.n]||0;
+    const list = DOCS.filter(d=>d.tier===t.n);
+    const a = cnt ? list.reduce((s,d)=>s+d.dvs,0)/cnt : 0;
+    return `<tr style="cursor:pointer" onclick="filterTier('${t.n}')">
+      <td><span class="pill p-${t.n}">${t.n}</span></td>
+      <td class="mono" style="font-size:11.5px">${t.min.toFixed(1)} – ${(tierMax(t)>10?10:tierMax(t)).toFixed(1)}</td>
+      <td class="num">${cnt}</td><td class="num">${n?pc(cnt/n):'—'}</td>
+      <td class="num">${cnt?a.toFixed(2):'—'}</td>
+      <td class="num">${Math.round(cnt*t.freq)}</td></tr>`;
+  }).join('') + `<tr style="background:#161f3c;font-weight:700">
+      <td>TOTAL</td><td></td><td class="num">${n}</td><td class="num">${n?'100%':'—'}</td>
+      <td class="num">${n?avg.toFixed(2):'—'}</td><td class="num">${Math.round(dem)}</td></tr>`;
+
+  $('histLegend').innerHTML = TIERS.map(t=>
+    `<span><i style="background:${t.col}"></i>${t.n} — ${t.role}</span>`).join('');
+
+  $('capKpis').innerHTML =
+    kpi('Capacity', cap? cap.toLocaleString('en-IN'):'0', 'calls available / month') +
+    kpi('Required', Math.round(dem).toLocaleString('en-IN'), 'calls in the plan', 'acc') +
+    kpi('Utilisation', cap? pc(u):'—', cap? (u>1?'over capacity':'within capacity'):'—', !cap?'':(u>1?'err':'ok')) +
+    kpi('Headroom', cap? Math.round(cap-dem).toLocaleString('en-IN'):'—', 'chemists, hospitals, admin', cap&&cap-dem<0?'err':'ok');
+
+  $('capVerdict').innerHTML = !cap
+    ? `<div class="note w">No active representatives yet. Add reps on the <b>Medical Reps</b> tab to check whether your call plan is deliverable.</div>`
+    : `<div class="note ${u>1?'e':'o'}"><b>${u>1?'Over capacity':'Feasible'}</b> — the plan needs ${Math.round(dem)} visits per month against ${cap.toLocaleString('en-IN')} available.
+       ${u>1? `Shortfall of ${Math.round(dem-cap)} visits. Reduce tier frequencies in Settings, or add about ${Math.ceil((dem-cap)/(CFG.days*CFG.calls))} more representative(s).`
+             : `${Math.round(cap-dem)} calls of headroom (${pc(1-u)}) for chemist coverage, hospital visits and administration.`}</div>`;
+
+  const rows = MRS.map(m=>{
+    const l = mrLoad(m.id), cp = mrCapacity(m), ut = cp? l.visits/cp : 0;
+    return `<tr style="cursor:pointer" onclick="openMR('${m.id}')">
+      <td><b>${esc(m.name)}</b>${m.code?` <span class="mono" style="color:var(--dim);font-size:11px">${esc(m.code)}</span>`:''}
+        ${m.active===false?'<span class="tag off" style="margin-left:5px">Inactive</span>':''}</td>
+      ${TIERS.map(t=>`<td class="num">${l[t.n]}</td>`).join('')}
+      <td class="num"><b>${l.docs}</b></td>
+      <td class="num">${Math.round(l.visits)}</td>
+      <td class="num">${cp}</td>
+      <td style="min-width:110px"><div class="bar"><i style="width:${Math.min(100,ut*100)}%;background:${ut>1?'var(--err)':ut>.85?'var(--warn)':'var(--acc2)'}"></i></div>
+        <span style="font-size:10.5px;color:var(--mut)">${pc(ut)}</span></td></tr>`;
+  }).join('');
+  const un = DOCS.filter(d=>!d.mrId || !MRS.find(m=>m.id===d.mrId));
+  const unRow = un.length ? `<tr style="background:#2a2110">
+      <td><b style="color:var(--warn)">Unassigned</b></td>
+      ${TIERS.map(t=>`<td class="num">${un.filter(d=>d.tier===t.n).length}</td>`).join('')}
+      <td class="num"><b>${un.length}</b></td>
+      <td class="num">${Math.round(un.reduce((a,d)=>a+visitsFor(d),0))}</td>
+      <td class="num">—</td><td><button class="btn xs" onclick="event.stopPropagation();autoAssign()">Auto-assign</button></td></tr>` : '';
+  $('mrLoadTbl').innerHTML = (rows||'') + unRow ||
+    `<tr><td colspan="9" class="empty"><b>No representatives yet</b>Add your field force to see workload distribution.</td></tr>`;
+
+  drawTierChart(); drawHist(); drawCapChart();
+}
+function filterTier(t){ goTab('docs'); $('dTier').value = t; renderDocs(); }
+
+/* ============================ DOCTORS TABLE ============================ */
+function renderDocs(){
+  const q = ($('dSearch').value||'').toLowerCase().trim();
+  const ft = $('dTier').value, fm = $('dMR').value, fs = $('dSpec').value;
+
+  // keep filter dropdowns in sync
+  const mrOpts = `<option value="">All reps</option><option value="__none">Unassigned</option>` +
+    MRS.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  if($('dMR').innerHTML !== mrOpts){ const cur = $('dMR').value; $('dMR').innerHTML = mrOpts; $('dMR').value = cur; }
+  const specsUsed = [...new Set(DOCS.map(d=>d.spec).filter(Boolean))].sort();
+  const spOpts = `<option value="">All specialties</option>` + specsUsed.map(s=>`<option>${esc(s)}</option>`).join('');
+  if($('dSpec').innerHTML !== spOpts){ const cur = $('dSpec').value; $('dSpec').innerHTML = spOpts; $('dSpec').value = cur; }
+
+  let rows = DOCS.filter(d=>{
+    if(ft && d.tier!==ft) return false;
+    if(fs && d.spec!==fs) return false;
+    if(fm==='__none' && d.mrId && MRS.find(m=>m.id===d.mrId)) return false;
+    if(fm && fm!=='__none' && d.mrId!==fm) return false;
+    if(q){
+      const hay = [d.name,d.spec,d.city,d.hospital,d.notes].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let x=a[SORT.k], y=b[SORT.k];
+    if(SORT.k==='mrId'){ x=mrName(a.mrId)||'zzz'; y=mrName(b.mrId)||'zzz'; }
+    if(typeof x==='number'&&typeof y==='number') return (x-y)*SORT.dir;
+    return String(x==null?'':x).localeCompare(String(y==null?'':y))*SORT.dir;
+  });
+
+  $('dCount').textContent = `${rows.length} of ${DOCS.length} doctors`;
+  $('docTbl').innerHTML = rows.map(d=>{
+    const mn = mrName(d.mrId);
+    return `<tr style="cursor:pointer" onclick="openDoctor('${d.id}')">
+      <td><b>${esc(d.name)}</b>${d.hospital?`<div style="font-size:10.5px;color:var(--dim)">${esc(d.hospital)}</div>`:''}</td>
+      <td style="color:var(--mut)">${esc(d.spec||'—')}</td>
+      <td style="color:var(--mut)">${esc(d.city||'—')}</td>
+      <td>${mn? esc(mn) : '<span class="tag off">Unassigned</span>'}</td>
+      ${PILLARS.map(p=>`<td class="num">${d[p.k]}</td>`).join('')}
+      <td class="num"><b style="color:var(--acc)">${d.dvs.toFixed(2)}</b></td>
+      <td><span class="pill p-${d.tier}">${d.tier}</span></td>
+      <td class="num">${tierObj(d.tier).freq.toFixed(2)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn g xs" onclick="event.stopPropagation();openDoctor('${d.id}')">Edit</button>
+        <button class="btn d xs" onclick="event.stopPropagation();quickDelDoc('${d.id}')">✕</button></td></tr>`;
+  }).join('') || `<tr><td colspan="13" class="empty"><b>${DOCS.length?'No matches':'No doctors yet'}</b>
+     ${DOCS.length? 'Try clearing the filters above.' : 'Click <b>+ Add Doctor</b>, or load the sample data to explore.'}</td></tr>`;
+}
+document.querySelectorAll('th.srt').forEach(th=>th.onclick=()=>{
+  const k = th.dataset.s;
+  SORT.dir = (SORT.k===k) ? -SORT.dir : (['name','spec','city','tier','mrId'].includes(k)?1:-1);
+  SORT.k = k; renderDocs();
+});
+function quickDelDoc(id){
+  const d = DOCS.find(x=>x.id===id); if(!d) return;
+  confirmBox(`Delete ${esc(d.name)}?`,'This removes the doctor record permanently.',()=>{
+    DOCS = DOCS.filter(x=>x.id!==id); persist(); renderAll(); toast('Doctor deleted');
+  });
+}
+function clearDocs(){
+  if(!DOCS.length) return toast('No doctors to clear');
+  confirmBox('Clear all doctors?', `This deletes all ${DOCS.length} doctor records. Representatives are kept.`, ()=>{
+    DOCS = []; persist(); renderAll(); toast('All doctors cleared');
+  });
+}
+function clearMRs(){
+  if(!MRS.length) return toast('No representatives to clear');
+  confirmBox('Clear all representatives?', `This deletes all ${MRS.length} representatives and unassigns every doctor.`, ()=>{
+    MRS = []; DOCS.forEach(d=>d.mrId=''); persist(); renderAll(); toast('All representatives cleared');
+  });
+}
+
+/* ============================ MR CARDS ============================ */
+function renderMRs(){
+  const q = ($('mSearch').value||'').toLowerCase().trim(), st = $('mStatus').value;
+  let list = MRS.filter(m=>{
+    if(st==='active' && m.active===false) return false;
+    if(st==='inactive' && m.active!==false) return false;
+    if(q && ![m.name,m.code,m.territory].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $('mCount').textContent = `${list.length} of ${MRS.length} representatives`;
+  $('mrGrid').innerHTML = list.map(m=>{
+    const l = mrLoad(m.id), cp = mrCapacity(m), ut = cp? l.visits/cp : 0;
+    const init = (m.name||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="mrcard">
+      <div class="hd">
+        <div class="av">${esc(init)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="nm">${esc(m.name)}</div>
+          <div class="cd">${esc(m.code||'—')}${m.territory?' · '+esc(m.territory):''}</div>
+        </div>
+        <span class="tag ${m.active!==false?'on':'off'}">${m.active!==false?'Active':'Inactive'}</span>
+      </div>
+      <div class="mrstat">
+        ${TIERS.map(t=>`<div><div class="n" style="color:${t.col}">${l[t.n]}</div><div class="t">${t.n.slice(0,4)}</div></div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-bottom:5px">
+        <span><b style="color:var(--txt)">${l.docs}</b> doctors</span>
+        <span><b style="color:var(--txt)">${Math.round(l.visits)}</b> / ${cp} calls</span>
+      </div>
+      <div class="bar"><i style="width:${Math.min(100,ut*100)}%;background:${ut>1?'var(--err)':ut>.85?'var(--warn)':'var(--acc2)'}"></i></div>
+      <div style="font-size:10.5px;color:${ut>1?'var(--err)':'var(--mut)'};margin-top:4px">
+        ${cp? pc(ut)+' utilisation' : 'no capacity set'}${ut>1?' — over capacity':''}</div>
+      <div class="rowflex" style="margin-top:11px">
+        <button class="btn g xs" onclick="openMR('${m.id}')">Edit</button>
+        <button class="btn g xs" onclick="viewMRDoctors('${m.id}')">View Doctors</button>
+        <div class="spacer"></div>
+        <button class="btn d xs" onclick="delMR('${m.id}')">✕</button>
+      </div></div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1"><b>${MRS.length?'No matches':'No representatives yet'}</b>
+     ${MRS.length?'Try clearing the filters.':'Click <b>+ Add Representative</b> to build your field force.'}</div>`;
+}
+function viewMRDoctors(id){ goTab('docs'); $('dMR').value = id; $('dTier').value=''; $('dSearch').value=''; renderDocs(); }
+
+/* ============================ ASSIGNMENT ============================ */
+function autoAssign(){
+  const active = MRS.filter(m=>m.active!==false);
+  if(!active.length) return toast('Add at least one active representative first','err');
+  if(!DOCS.length) return toast('No doctors to assign','err');
+  confirmBox('Auto-assign all doctors?',
+    `Doctors are sorted by DVS and assigned to the least-loaded representative, balancing visit workload rather than headcount. This overwrites existing assignments for all ${DOCS.length} doctors.`,
+    ()=>{
+      const load = {}; active.forEach(m=>load[m.id]=0);
+      DOCS.slice().sort((a,b)=>b.dvs-a.dvs).forEach(d=>{
+        // pick rep with most remaining headroom (capacity-aware LPT)
+        let best = active[0], bestFree = -1e9;
+        active.forEach(m=>{
+          const free = mrCapacity(m) - load[m.id];
+          if(free > bestFree){ bestFree = free; best = m; }
+        });
+        d.mrId = best.id; load[best.id] += visitsFor(d);
+      });
+      persist(); renderAll(); toast(`${DOCS.length} doctors assigned across ${active.length} representatives`,'ok');
+    });
+}
+function bulkAssign(){
+  if(!MRS.length) return toast('Add a representative first','err');
+  const q = ($('dSearch').value||'').toLowerCase().trim();
+  const ft = $('dTier').value, fm = $('dMR').value, fs = $('dSpec').value;
+  const shown = DOCS.filter(d=>{
+    if(ft && d.tier!==ft) return false;
+    if(fs && d.spec!==fs) return false;
+    if(fm==='__none' && d.mrId && MRS.find(m=>m.id===d.mrId)) return false;
+    if(fm && fm!=='__none' && d.mrId!==fm) return false;
+    if(q && ![d.name,d.spec,d.city,d.hospital,d.notes].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(!shown.length) return toast('No doctors in the current view','err');
+  modal({ title:'Bulk Assign Representative', sm:true,
+    body:`<div class="sub">Assign the <b>${shown.length}</b> doctor${shown.length>1?'s':''} currently shown in your filtered list to one representative.</div>
+      <div class="fld"><label>Representative</label>
+        <select id="baMR"><option value="">— Unassign —</option>
+          ${MRS.map(m=>`<option value="${m.id}">${esc(m.name)}${m.code?' ('+esc(m.code)+')':''}</option>`).join('')}
+        </select></div>`,
+    foot:`<button class="btn" onclick="doBulkAssign()">Apply to ${shown.length}</button>
+          <button class="btn g" onclick="closeModal()">Cancel</button>` });
+  window.__bulkIds = shown.map(d=>d.id);
+}
+function doBulkAssign(){
+  const id = $('baMR').value;
+  (window.__bulkIds||[]).forEach(did=>{ const d = DOCS.find(x=>x.id===did); if(d) d.mrId = id; });
+  const n = (window.__bulkIds||[]).length;
+  persist(); closeModal(); renderAll();
+  toast(id? `${n} doctors assigned to ${mrName(id)}` : `${n} doctors unassigned`,'ok');
+}
+</script>
+
+<script>
+/* ============================ CHARTS ============================ */
+function ctx(id){
+  const c = $(id); if(!c) return null;
+  const cw = c.clientWidth, ch = c.clientHeight;
+  if(cw < 10 || ch < 10) return null;
+  const x = c.getContext('2d'), dpr = window.devicePixelRatio||1;
+  if(c.width !== Math.round(cw*dpr)){ c.width = Math.round(cw*dpr); c.height = Math.round(ch*dpr); }
+  x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,cw,ch);
+  return {x, w:cw, h:ch};
+}
+const GRID='#24304f', TXT='#94a3c4';
+
+function drawTierChart(){
+  const C = ctx('tierChart'); if(!C) return; const {x,w,h} = C;
+  const pad = {l:8,r:8,t:8,b:26};
+  const c = counts(), n = DOCS.length;
+  if(!n){ x.fillStyle=TXT; x.font='12px system-ui'; x.textAlign='center';
+          x.fillText('No doctors yet', w/2, h/2); x.textAlign='left'; return; }
+  const gw = w-pad.l-pad.r, bh = h-pad.t-pad.b;
+  let acc = 0;
+  TIERS.forEach(t=>{
+    const frac = (c[t.n]||0)/n; if(!frac) return;
+    const bw = gw*frac;
+    x.fillStyle = t.col; x.globalAlpha = .92;
+    x.fillRect(pad.l+acc, pad.t, bw-1.5, bh); x.globalAlpha = 1;
+    if(bw > 42){
+      x.fillStyle = '#0b1020'; x.font = 'bold 12px system-ui'; x.textAlign = 'center';
+      x.fillText(c[t.n], pad.l+acc+bw/2, pad.t+bh/2+4);
+    }
+    if(bw > 58){
+      x.fillStyle = t.col; x.font = 'bold 9.5px system-ui'; x.textAlign = 'center';
+      x.fillText(t.n, pad.l+acc+bw/2, h-9);
+    }
+    acc += bw;
+  });
+  x.textAlign = 'left';
+}
+
+function drawHist(){
+  const C = ctx('hist'); if(!C) return; const {x,w,h} = C;
+  const pad = {l:34,r:12,t:12,b:34};
+  const bins = new Array(20).fill(0);
+  DOCS.forEach(d=>{ bins[Math.min(19, Math.max(0, Math.floor(d.dvs/10*20)))]++; });
+  const mx = Math.max(1, ...bins), gw = w-pad.l-pad.r, gh = h-pad.t-pad.b, bw = gw/20;
+  x.strokeStyle = GRID; x.lineWidth = 1; x.beginPath();
+  x.moveTo(pad.l,pad.t); x.lineTo(pad.l,h-pad.b); x.lineTo(w-pad.r,h-pad.b); x.stroke();
+  if(!DOCS.length){ x.fillStyle=TXT; x.font='12px system-ui'; x.textAlign='center';
+    x.fillText('No doctors scored yet', w/2, h/2); x.textAlign='left'; return; }
+  bins.forEach((v,i)=>{
+    if(!v) return;
+    const mid = (i+0.5)/20*10, t = tierObj(tierOf(mid)), bhh = gh*v/mx;
+    x.fillStyle = t.col; x.globalAlpha = .88;
+    x.fillRect(pad.l+i*bw+1, h-pad.b-bhh, bw-2, bhh); x.globalAlpha = 1;
+  });
+  x.strokeStyle = '#fff'; x.globalAlpha = .22; x.setLineDash([3,3]);
+  TIERS.filter(t=>t.min>0).forEach(t=>{
+    const px = pad.l+gw*t.min/10;
+    x.beginPath(); x.moveTo(px,pad.t); x.lineTo(px,h-pad.b); x.stroke();
+  });
+  x.setLineDash([]); x.globalAlpha = 1;
+  x.fillStyle = TXT; x.font = '10px system-ui'; x.textAlign = 'center';
+  [0,2,4,6,8,10].forEach(v=>x.fillText(v, pad.l+gw*v/10, h-pad.b+14));
+  x.fillText('Doctor Value Score', pad.l+gw/2, h-6);
+  x.textAlign = 'right'; x.fillText(mx, pad.l-5, pad.t+9); x.fillText('0', pad.l-5, h-pad.b);
+  x.textAlign = 'left';
+}
+
+function drawCapChart(){
+  const C = ctx('capChart'); if(!C) return; const {x,w,h} = C;
+  const pad = {l:10,r:10,t:16,b:34};
+  const cap = totalCapacity(), dem = totalDemand();
+  const mx = Math.max(cap, dem)*1.1 || 1;
+  const gw = w-pad.l-pad.r, bh = 40, y0 = pad.t+6;
+  x.fillStyle = '#1a2440'; x.fillRect(pad.l, y0, gw*cap/mx, bh);
+  let acc = 0;
+  TIERS.forEach(t=>{
+    const v = (counts()[t.n]||0)*t.freq; if(!v) return;
+    x.fillStyle = t.col; x.globalAlpha = .9;
+    x.fillRect(pad.l+gw*acc/mx, y0, gw*v/mx, bh); acc += v; x.globalAlpha = 1;
+  });
+  if(cap){
+    const cx = pad.l+gw*cap/mx;
+    x.strokeStyle = '#f2545b'; x.lineWidth = 2; x.beginPath();
+    x.moveTo(cx, y0-7); x.lineTo(cx, y0+bh+7); x.stroke();
+    x.fillStyle = '#f2545b'; x.font = 'bold 10px system-ui'; x.textAlign = 'right';
+    x.fillText('CAPACITY ' + cap.toLocaleString('en-IN'), Math.min(cx-4, w-pad.r), y0-11);
+  }
+  x.fillStyle = TXT; x.font = '11px system-ui'; x.textAlign = 'left';
+  x.fillText(`Required: ${Math.round(dem).toLocaleString('en-IN')} calls/month`
+    + (cap? `  (${pc(dem/cap)} utilisation)` : ''), pad.l, y0+bh+22);
+}
+
+function drawWaterfall(){
+  const C = ctx('waterfall'); if(!C) return; const {x,w,h} = C;
+  const pad = {l:30,r:12,t:14,b:44};
+  const gh = h-pad.t-pad.b, gw = w-pad.l-pad.r;
+  const cols = PILLARS.length + 1, bw = gw/cols;
+  x.strokeStyle = GRID; x.lineWidth = 1; x.beginPath();
+  x.moveTo(pad.l,pad.t); x.lineTo(pad.l,h-pad.b); x.lineTo(w-pad.r,h-pad.b); x.stroke();
+  const palette = ['#4f8cff','#22d3a6','#e0b23c','#a78bfa','#f2545b','#38bdf8'];
+  let run = 0;
+  PILLARS.forEach((p,i)=>{
+    const val = (CALC[p.k]||0)*p.w;
+    const y1 = h-pad.b-gh*run/10, y2 = h-pad.b-gh*(run+val)/10;
+    x.fillStyle = palette[i%palette.length];
+    x.fillRect(pad.l+i*bw+5, y2, bw-10, Math.max(1,y1-y2));
+    x.fillStyle = '#e8edf9'; x.font = 'bold 10px system-ui'; x.textAlign = 'center';
+    if(val>0.01) x.fillText(val.toFixed(2), pad.l+i*bw+bw/2, y2-4);
+    x.fillStyle = TXT; x.font = '9px system-ui';
+    p.short.split(' ').slice(0,2).forEach((wd,j)=>
+      x.fillText(wd, pad.l+i*bw+bw/2, h-pad.b+13+j*10));
+    x.fillText((p.w*100).toFixed(0)+'%', pad.l+i*bw+bw/2, h-pad.b+34);
+    run += val;
+  });
+  const i = PILLARS.length, y = h-pad.b-gh*run/10;
+  x.fillStyle = '#22c55e';
+  x.fillRect(pad.l+i*bw+5, y, bw-10, h-pad.b-y);
+  x.fillStyle = '#fff'; x.font = 'bold 12px system-ui'; x.textAlign = 'center';
+  x.fillText(run.toFixed(2), pad.l+i*bw+bw/2, y-5);
+  x.fillStyle = TXT; x.font = '9px system-ui';
+  x.fillText('TOTAL', pad.l+i*bw+bw/2, h-pad.b+13);
+  x.fillText('DVS', pad.l+i*bw+bw/2, h-pad.b+23);
+  x.textAlign = 'left';
+}
+
+/* ============================ SETTINGS ============================ */
+function syncSettings(){
+  if(!$('wBox')) return;
+  $('wBox').innerHTML = PILLARS.map(p=>`
+    <div class="fld">
+      <label>${p.n} — <b id="wl_${p.k}">${(p.w*100).toFixed(0)}%</b></label>
+      <input type="range" id="w_${p.k}" min="0" max="60" step="1" value="${Math.round(p.w*100)}" oninput="wPreview()">
+    </div>`).join('');
+  $('tierCfg').innerHTML = TIERS.map((t,i)=>`
+    <tr><td><span class="pill p-${t.n}">${t.n}</span></td>
+      <td class="num"><input type="number" id="tm_${i}" value="${t.min}" min="0" max="10" step="0.1" style="width:74px;text-align:right" oninput="tierPreview()"></td>
+      <td class="num"><input type="number" id="tf_${i}" value="${t.freq}" min="0" max="20" step="0.01" style="width:74px;text-align:right" oninput="tierPreview()"></td>
+      <td class="num"><input type="number" id="ts_${i}" value="${t.split}" min="0" max="100" step="1" style="width:74px;text-align:right" oninput="tierPreview()"></td></tr>`).join('');
+  $('sBudget').value = CFG.budget; $('sDays').value = CFG.days; $('sCalls').value = CFG.calls;
+  if(document.activeElement !== $('sSpecs')) $('sSpecs').value = SPECS.join('\n');
+  wPreview(); tierPreview();
+}
+function wPreview(){
+  let tot = 0;
+  PILLARS.forEach(p=>{ const v = +$('w_'+p.k).value; tot += v; $('wl_'+p.k).textContent = v+'%'; });
+  $('wWarn').innerHTML = tot===100
+    ? `<div class="note o">Weights total <b>100%</b> — valid.</div>`
+    : `<div class="note e">Weights total <b>${tot}%</b>. They must sum to exactly 100% before you can apply.</div>`;
+}
+function applyWeights(){
+  let tot = 0; PILLARS.forEach(p=>tot += +$('w_'+p.k).value);
+  if(tot !== 100) return toast('Weights must total exactly 100%','err');
+  PILLARS.forEach(p=>p.w = (+$('w_'+p.k).value)/100);
+  rescoreAll(); persist(); buildCalc(); syncCalcInputs(); renderAll();
+  toast('Weights applied — all doctors re-scored','ok');
+}
+function resetWeights(){
+  PILLARS.forEach((p,i)=>p.w = DEFAULT_PILLARS[i].w);
+  rescoreAll(); persist(); buildCalc(); syncCalcInputs(); renderAll();
+  toast('Weights reset to defaults');
+}
+function tierPreview(){
+  const mins = TIERS.map((t,i)=>+$('tm_'+i).value);
+  const splits = TIERS.map((t,i)=>+$('ts_'+i).value);
+  const ts = splits.reduce((a,b)=>a+b,0);
+  const desc = mins.every((v,i)=> i===0 || mins[i-1] > v);
+  let msg = '';
+  if(!desc) msg += `<div class="note e">Tier minimums must decrease down the table (Platinum highest, Bronze lowest).</div>`;
+  if(Math.abs(ts-100) > 0.5) msg += `<div class="note w">Budget shares total <b>${ts}%</b>. They will be normalised to 100% when allocating.</div>`;
+  if(!msg) msg = `<div class="note o">Thresholds valid. Budget shares total <b>100%</b>.</div>`;
+  $('tierWarn').innerHTML = msg;
+}
+function applyTiers(){
+  const mins = TIERS.map((t,i)=>+$('tm_'+i).value);
+  if(!mins.every((v,i)=> i===0 || mins[i-1] > v)) return toast('Tier minimums must decrease down the table','err');
+  TIERS.forEach((t,i)=>{
+    t.min   = +$('tm_'+i).value;
+    t.freq  = +$('tf_'+i).value;
+    t.split = +$('ts_'+i).value;
+  });
+  rescoreAll(); persist(); renderAll();
+  toast('Tier settings applied — all doctors re-scored','ok');
+}
+function resetTiers(){
+  TIERS = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+  rescoreAll(); persist(); renderAll(); toast('Tier settings reset to defaults');
+}
+function setBudget(){ CFG.budget = Math.max(0, +$('sBudget').value||0); persist(); renderCalc(); }
+function setDefaults(){
+  CFG.days = Math.max(1, +$('sDays').value||22);
+  CFG.calls = Math.max(1, +$('sCalls').value||9);
+  persist();
+}
+function setSpecs(){
+  const list = $('sSpecs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(list.length){ SPECS = list; persist(); }
+}
+</script>
+
+<script>
+/* ============================ IMPORT / EXPORT ============================ */
+function dl(content, name, type){
+  const b = new Blob([content], {type}), u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href = u; a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(u), 1200);
+}
+const csvCell = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+
+function exportMenu(){
+  modal({ title:'Export Data', sm:true,
+    body:`<div class="sub">Choose what to download. CSV files open directly in Excel.</div>
+      <div class="grid" style="gap:9px">
+        <button class="btn g" onclick="exportDoctorsCSV()">Doctors → CSV (${DOCS.length})</button>
+        <button class="btn g" onclick="exportMRsCSV()">Representatives → CSV (${MRS.length})</button>
+        <button class="btn g" onclick="exportJSON()">Full backup → JSON (everything)</button>
+        <button class="btn g" onclick="window.print()">Print / Save as PDF</button>
+      </div>`,
+    foot:`<button class="btn g" onclick="closeModal()">Close</button>` });
+}
+function exportDoctorsCSV(){
+  if(!DOCS.length) return toast('No doctors to export','err');
+  const head = ['Name','Specialty','City','Hospital','Phone','Email','Representative',
+    ...PILLARS.map(p=>p.n), 'DVS','Tier','VisitsPerMonth','BudgetPerQuarter','Notes'];
+  const rows = DOCS.map(d=>[d.name,d.spec,d.city,d.hospital,d.phone,d.email, mrName(d.mrId)||'',
+    ...PILLARS.map(p=>d[p.k]), d.dvs.toFixed(4), d.tier,
+    tierObj(d.tier).freq.toFixed(2), Math.round(budgetPerDoctor(d.tier)), d.notes]);
+  dl([head,...rows].map(r=>r.map(csvCell).join(',')).join('\n'), 'doctors.csv','text/csv;charset=utf-8;');
+  toast(`${DOCS.length} doctors exported`,'ok'); closeModal();
+}
+function exportMRsCSV(){
+  if(!MRS.length) return toast('No representatives to export','err');
+  const head = ['Name','Code','Territory','Phone','Email','Status','WorkingDays','CallsPerDay',
+    'CapacityPerMonth','DoctorsAssigned','VisitsRequired','Utilisation',...TIERS.map(t=>t.n),'Notes'];
+  const rows = MRS.map(m=>{ const l = mrLoad(m.id), cp = mrCapacity(m);
+    return [m.name,m.code,m.territory,m.phone,m.email, m.active!==false?'Active':'Inactive',
+      m.days,m.calls,cp,l.docs,Math.round(l.visits), cp?(l.visits/cp*100).toFixed(1)+'%':'',
+      ...TIERS.map(t=>l[t.n]), m.notes]; });
+  dl([head,...rows].map(r=>r.map(csvCell).join(',')).join('\n'), 'representatives.csv','text/csv;charset=utf-8;');
+  toast(`${MRS.length} representatives exported`,'ok'); closeModal();
+}
+function exportJSON(){
+  dl(JSON.stringify({docs:DOCS, mrs:MRS, cfg:CFG, specs:SPECS,
+    pillars:PILLARS.map(p=>({k:p.k,w:p.w})),
+    tiers:TIERS.map(t=>({n:t.n,min:t.min,freq:t.freq,split:t.split})),
+    v:1, exported:new Date().toISOString()}, null, 2),
+    'dvs_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json');
+  toast('Backup downloaded','ok'); closeModal();
+}
+
+function openImport(){
+  modal({ title:'Import Data',
+    body:`
+      <h3 style="margin-top:0">Restore a JSON backup</h3>
+      <div class="sub">Replaces everything currently in the app with the contents of the backup file.</div>
+      <input type="file" id="impFile" accept=".json,application/json" onchange="importJSON(this)">
+      <h3>Import doctors from CSV</h3>
+      <div class="sub">Paste rows below, or choose a .csv file. Required columns: <b>Name</b>, plus the five pillar
+        scores. A header row is recommended — the importer matches columns by name and is case-insensitive.</div>
+      <div class="fld"><input type="file" id="impCsvFile" accept=".csv,text/csv" onchange="loadCsvFile(this)"></div>
+      <div class="fx" style="font-size:11.5px;color:var(--mut);margin-bottom:10px">Name,Specialty,City,Hospital,P1,P2,P3,P4,P5
+Dr. Rajesh Kumar,Cardiologist,Delhi,City Hospital,8,9,7,8,6
+Dr. Anita Sharma,Diabetologist,Gurgaon,Metro Clinic,6,7,5,7,4</div>
+      <textarea id="impCsv" rows="7" class="mono" style="font-size:12px"
+        placeholder="Paste CSV rows here…"></textarea>
+      <div class="fld" style="margin-top:11px">
+        <label>Assign all imported doctors to</label>
+        <select id="impMR"><option value="">— Leave unassigned —</option>
+          ${MRS.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
+      </div>
+      <div id="impMsg"></div>`,
+    foot:`<button class="btn" onclick="importCSV()">Import Doctors</button>
+          <button class="btn g" onclick="closeModal()">Cancel</button>` });
+}
+function loadCsvFile(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e=>{ $('impCsv').value = e.target.result;
+    $('impMsg').innerHTML = `<div class="note o">Loaded <b>${esc(f.name)}</b>. Review above, then click Import Doctors.</div>`; };
+  r.readAsText(f);
+}
+function importJSON(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    try{
+      const s = JSON.parse(e.target.result);
+      if(!s.docs && !s.mrs) throw new Error('not a DVS backup');
+      confirmBox('Restore this backup?',
+        `Replaces your current data with ${(s.docs||[]).length} doctors and ${(s.mrs||[]).length} representatives.`,
+        ()=>{
+          if(s.pillars) s.pillars.forEach(sp=>{ const p = PILLARS.find(x=>x.k===sp.k); if(p) p.w = sp.w; });
+          if(s.tiers && s.tiers.length) TIERS = s.tiers.map(st=>Object.assign({}, DEFAULT_TIERS.find(x=>x.n===st.n)||{}, st));
+          if(s.specs && s.specs.length) SPECS = s.specs;
+          if(s.cfg) CFG = Object.assign(CFG, s.cfg);
+          DOCS = (s.docs||[]).map(d=>rescore(Object.assign({id:uid('d')}, d)));
+          MRS  = (s.mrs||[]).map(m=>Object.assign({id:uid('m')}, m));
+          // remap doctor→MR links by original id where possible
+          if(s.docs && s.mrs){
+            const map = {}; (s.mrs||[]).forEach((om,i)=>map[om.id]=MRS[i].id);
+            DOCS.forEach((d,i)=>{ const orig = s.docs[i]; d.mrId = map[orig.mrId]||''; });
+          }
+          persist(); closeModal(); buildCalc(); renderAll();
+          toast(`Restored ${DOCS.length} doctors and ${MRS.length} representatives`,'ok');
+        });
+    }catch(err){ toast('That file is not a valid DVS backup','err'); }
+  };
+  r.readAsText(f);
+}
+function parseCSVLine(line){
+  const out = []; let cur = '', q = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(q){
+      if(ch === '"' && line[i+1] === '"'){ cur += '"'; i++; }
+      else if(ch === '"'){ q = false; }
+      else cur += ch;
+    } else {
+      if(ch === '"') q = true;
+      else if(ch === ','){ out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur); return out.map(s=>s.trim());
+}
+function importCSV(){
+  const raw = ($('impCsv').value||'').trim();
+  if(!raw) return toast('Paste some CSV rows first','err');
+  const lines = raw.split(/\r?\n/).filter(l=>l.trim());
+  const mrId = $('impMR').value;
+  let cols = null, start = 0;
+  const first = parseCSVLine(lines[0]).map(s=>s.toLowerCase().replace(/[^a-z0-9]/g,''));
+  const known = ['name','specialty','speciality','city','hospital','phone','email','p1','p2','p3','p4','p5',
+    'prescriptionpotential','adoptionpropensity','influencenetworkpower','influence','accessibility',
+    'competitivevulnerability','notes','territory'];
+  if(first.some(h=>known.includes(h))){ cols = first; start = 1; }
+
+  const idx = nameList => { if(!cols) return -1;
+    for(const n of nameList){ const i = cols.indexOf(n); if(i>=0) return i; } return -1; };
+  const map = cols ? {
+    name: idx(['name','doctor','doctorname']),
+    spec: idx(['specialty','speciality','spec']),
+    city: idx(['city','area','location']),
+    hospital: idx(['hospital','clinic','hospitalclinic']),
+    phone: idx(['phone','mobile','contact']),
+    email: idx(['email','mail']),
+    notes: idx(['notes','remarks','comment']),
+    p1: idx(['p1','prescriptionpotential','rxpotential']),
+    p2: idx(['p2','adoptionpropensity','adoption']),
+    p3: idx(['p3','influencenetworkpower','influence','influencepower']),
+    p4: idx(['p4','accessibility','access']),
+    p5: idx(['p5','competitivevulnerability','competitive'])
+  } : {name:0, spec:1, city:2, hospital:3, p1:4, p2:5, p3:6, p4:7, p5:8, phone:-1, email:-1, notes:-1};
+
+  let added = 0, skipped = 0;
+  for(let i=start;i<lines.length;i++){
+    const c = parseCSVLine(lines[i]);
+    const get = k => (map[k]>=0 && c[map[k]]!=null) ? c[map[k]] : '';
+    const nm = (get('name')||'').trim();
+    if(!nm){ skipped++; continue; }
+    const d = {id:uid('d'), created:Date.now(), name:nm,
+      spec:(get('spec')||SPECS[0]||'').trim(), city:(get('city')||'').trim(),
+      hospital:(get('hospital')||'').trim(), phone:(get('phone')||'').trim(),
+      email:(get('email')||'').trim(), notes:(get('notes')||'').trim(), mrId};
+    PILLARS.forEach(p=>{
+      const v = +get(p.k);
+      d[p.k] = (isFinite(v) && v>=0 && v<=10) ? Math.round(v) : 5;
+    });
+    DOCS.push(rescore(d)); added++;
+  }
+  if(!added) return toast('No valid rows found — check that a Name column is present','err');
+  persist(); closeModal(); renderAll();
+  toast(`${added} doctor${added>1?'s':''} imported${skipped?`, ${skipped} row(s) skipped`:''}`,'ok');
+}
+
+function wipeAll(){
+  confirmBox('Erase everything?','This permanently deletes all doctors, representatives and settings from this browser. Export a backup first if you may need this data.',()=>{
+    localStorage.removeItem(KEY);
+    DOCS = []; MRS = [];
+    PILLARS = JSON.parse(JSON.stringify(DEFAULT_PILLARS));
+    TIERS = JSON.parse(JSON.stringify(DEFAULT_TIERS));
+    SPECS = DEFAULT_SPECS.slice();
+    CFG = {budget:3000000, days:22, calls:9};
+    persist(); buildCalc(); renderAll(); toast('All data erased');
+  });
+}
+
+/* ============================ SAMPLE DATA ============================ */
+const FIRST = ['Rajesh','Anita','Suresh','Priya','Vikram','Meera','Arjun','Kavita','Sanjay','Deepa',
+  'Rahul','Neha','Amit','Sunita','Manoj','Pooja','Ashok','Rekha','Vinod','Shalini','Prakash','Nisha',
+  'Ramesh','Divya','Ajay','Swati','Naveen','Anjali','Girish','Lata','Harish','Sneha','Mohan','Ritu'];
+const LAST = ['Kumar','Sharma','Reddy','Patel','Singh','Gupta','Nair','Iyer','Desai','Joshi','Rao',
+  'Mehta','Verma','Shah','Bose','Chopra','Malhotra','Pillai','Menon','Agarwal','Banerjee','Kulkarni'];
+const CITIES = ['South Delhi','North Delhi','Gurgaon','Noida','Faridabad','Ghaziabad','Dwarka','Rohini'];
+const HOSP = ['City Hospital','Apollo Clinic','Max Healthcare','Fortis','Medanta','Sunrise Clinic',
+  'Care Multispecialty','LifeLine Hospital','Wellness Centre','Metro Heart Institute'];
+
+let _sd = 20260803;
+const rnd = () => { _sd = (_sd*1103515245 + 12345) & 0x7fffffff; return _sd/0x7fffffff; };
+const pick = a => a[Math.floor(rnd()*a.length)];
+function gauss(sd){ const u = Math.max(1e-9,rnd()), v = rnd();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)*sd; }
+function gammaRV(k){
+  if(k<1) return gammaRV(k+1)*Math.pow(Math.max(1e-9,rnd()),1/k);
+  const d = k-1/3, c = 1/Math.sqrt(9*d);
+  for(;;){ let x,v; do{ x = gauss(1); v = 1+c*x; } while(v<=0);
+    v = v*v*v; const u = rnd();
+    if(u < 1-0.0331*x*x*x*x) return d*v;
+    if(Math.log(u) < 0.5*x*x + d*(1-v+Math.log(v))) return d*v; }
+}
+const betaRV = (a,b) => { const x = gammaRV(a), y = gammaRV(b); return x/(x+y); };
+
+function loadDemo(){
+  const go = ()=>{
+    _sd = 20260803;
+    MRS = [];
+    const terr = ['South Delhi','North Delhi','Gurgaon','Noida','East Delhi','West Delhi'];
+    for(let i=0;i<6;i++) MRS.push({id:uid('m'), created:Date.now(),
+      name: pick(FIRST)+' '+pick(LAST), code:'MR-'+(i+1), territory:terr[i],
+      phone:'+91 98'+Math.floor(10000000+rnd()*89999999), email:'', active:true,
+      days:CFG.days, calls:CFG.calls, notes:''});
+    DOCS = [];
+    for(let i=0;i<600;i++){
+      const z = betaRV(1.9, 2.6);
+      const d = {id:uid('d'), created:Date.now(),
+        name:'Dr. '+pick(FIRST)+' '+pick(LAST), spec:pick(SPECS),
+        city:pick(CITIES), hospital:pick(HOSP),
+        phone:'+91 98'+Math.floor(10000000+rnd()*89999999), email:'', notes:'', mrId:''};
+      PILLARS.forEach(p=>{
+        const vals = p.anchors.map(a=>a[0]).sort((a,b)=>a-b);
+        const r = Math.max(0, Math.min(0.9999, z + gauss(0.22)));
+        d[p.k] = vals[Math.floor(r*vals.length)];
+      });
+      DOCS.push(rescore(d));
+    }
+    // capacity-aware balanced assignment
+    const load = {}; MRS.forEach(m=>load[m.id]=0);
+    DOCS.slice().sort((a,b)=>b.dvs-a.dvs).forEach(d=>{
+      let best = MRS[0], bf = -1e9;
+      MRS.forEach(m=>{ const f = mrCapacity(m)-load[m.id]; if(f>bf){ bf=f; best=m; } });
+      d.mrId = best.id; load[best.id] += visitsFor(d);
+    });
+    persist(); renderAll();
+    const c = counts();
+    toast(`Loaded 600 doctors and 6 representatives — ${c.PLATINUM} Platinum, ${c.GOLD} Gold, ${c.SILVER} Silver, ${c.BRONZE} Bronze`,'ok');
+  };
+  if(DOCS.length || MRS.length){
+    confirmBox('Load sample data?', `This replaces your current ${DOCS.length} doctors and ${MRS.length} representatives with a generated sample set of 600 doctors and 6 representatives.`, go);
+  } else go();
+}
+
+/* ============================ BOOT ============================ */
+buildCalc();
+const had = restore();
+if(!had){ loadDemoSilent(); }
+function loadDemoSilent(){
+  _sd = 20260803;
+  const terr = ['South Delhi','North Delhi','Gurgaon','Noida','East Delhi','West Delhi'];
+  for(let i=0;i<6;i++) MRS.push({id:uid('m'), created:Date.now(),
+    name: pick(FIRST)+' '+pick(LAST), code:'MR-'+(i+1), territory:terr[i],
+    phone:'', email:'', active:true, days:CFG.days, calls:CFG.calls, notes:''});
+  for(let i=0;i<600;i++){
+    const z = betaRV(1.9, 2.6);
+    const d = {id:uid('d'), created:Date.now(),
+      name:'Dr. '+pick(FIRST)+' '+pick(LAST), spec:pick(SPECS),
+      city:pick(CITIES), hospital:pick(HOSP), phone:'', email:'', notes:'', mrId:''};
+    PILLARS.forEach(p=>{
+      const vals = p.anchors.map(a=>a[0]).sort((a,b)=>a-b);
+      const r = Math.max(0, Math.min(0.9999, z + gauss(0.22)));
+      d[p.k] = vals[Math.floor(r*vals.length)];
+    });
+    DOCS.push(rescore(d));
+  }
+  const load = {}; MRS.forEach(m=>load[m.id]=0);
+  DOCS.slice().sort((a,b)=>b.dvs-a.dvs).forEach(d=>{
+    let best = MRS[0], bf = -1e9;
+    MRS.forEach(m=>{ const f = mrCapacity(m)-load[m.id]; if(f>bf){ bf=f; best=m; } });
+    d.mrId = best.id; load[best.id] += visitsFor(d);
+  });
+  persist();
+}
+renderAll();
+window.addEventListener('resize', ()=>{ drawTierChart(); drawHist(); drawCapChart(); drawWaterfall(); });
+</script>
+</body>
+</html>

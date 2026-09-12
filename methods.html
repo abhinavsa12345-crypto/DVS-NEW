@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methods & Derivations — AI-Driven Precision Targeting for Pharmaceutical Sales</title>
+<meta name="description" content="AI-Driven Precision Targeting for Pharmaceutical Sales: A Predictive Model for Doctor Prioritization and Resource Optimization. A five-pillar predictive scoring model for prescriber prioritisation and field-resource allocation.">
+<meta name="author" content="Abhinav Kumar">
+<link rel="stylesheet" href="assets/style.css">
+
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="wrap navin">
+    <a class="brand" href="index.html">
+      <span class="bmark">AI</span>
+      <span class="btext">Precision Targeting<em>Pharmaceutical Sales Model</em></span>
+    </a>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="problem.html">The Problem</a>
+      <a href="model.html">The Model</a>
+      <a href="methods.html" class='on'>Methods</a>
+      <a href="results.html">Results</a>
+      <a href="validation.html">Validation</a>
+      <a href="resources.html">Resources</a>
+      <a class="cta" href="app.html">Launch Tool →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="ph">
+  <div class="wrap">
+    <div class="eyebrow">Section 03</div>
+    <h1>Methods & Derivations</h1>
+    <p class="phsub">Multi-Attribute Utility Theory, sales-response optimisation, makespan scheduling and concentration analysis — each derived from first principles.</p>
+  </div>
+</header>
+
+<main id="main">
+
+<section><div class="wrap">
+  <h2>Four techniques, each derived from first principles</h2>
+  <p class="lead">The project's central claim is that none of its formulas are invented for
+    convenience. Each rests on established theory, and each derivation is reproduced in full in
+    the accompanying report.</p>
+
+  <figure>
+    <img src="assets/flow.png" alt="Five-stage model pipeline">
+    <figcaption><b>Figure 4.</b> The model pipeline. Segmentation feeds allocation, which drives
+      engagement; measurement closes the loop through quarterly recalibration.</figcaption>
+  </figure>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <div class="eyebrow">Technique 1</div>
+  <h2>Multi-Attribute Utility Theory</h2>
+  <p class="lead">Why the five scores are <i>added</i> rather than multiplied — the question any
+    examiner asks first.</p>
+
+  <div class="step"><div class="sn">1</div><div>
+    <h4>The problem class</h4>
+    <p>We must rank alternatives (doctors) differing on several criteria at once. This is the
+    standard multi-criteria decision problem addressed by MAUT, formalised by
+    <b>Keeney &amp; Raiffa (1976)</b>.</p></div></div>
+
+  <div class="step"><div class="sn">2</div><div>
+    <h4>The condition that must hold</h4>
+    <p><b>Mutual preferential independence.</b> The trade-off accepted between any two attributes
+    must not depend on the levels of the others. If every subset of attributes is preferentially
+    independent of its complement, an additive value function exists — Theorem 3.6.</p></div></div>
+
+  <div class="step"><div class="sn">3</div><div>
+    <h4>Why the sub-functions vanish</h4>
+    <p>The general form is V(x) = Σ wᵢ vᵢ(xᵢ). Here every pillar is already scored on a shared
+    anchored 0–10 scale, so vᵢ is the identity map and V collapses to Σ wᵢ sᵢ — the practical
+    simplification Edwards (1977) formalised as <b>SMART</b>.</p></div></div>
+
+  <div class="step"><div class="sn">4</div><div>
+    <h4>Proof of bounds</h4>
+    <p>Because Σwᵢ = 1 with all weights positive, DVS is a <b>convex combination</b> and lies
+    within the range of its inputs. All pillars at 10 gives 10 × 1 = <b>10.00</b>. At the rubric
+    floors (2,2,2,1,1) the minimum is <b>1.75</b>.</p></div></div>
+
+  <div class="fbox">DVS_max = 10 × Σ wᵢ = 10 × 1 = <b>10.00</b>
+DVS_min = 2(0.30) + 2(0.25) + 2(0.20) + 1(0.15) + 1(0.10) = <b>1.75</b></div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow">Technique 2</div>
+  <h2>Sales-response optimisation</h2>
+  <p class="lead">The strongest analytical result in the project: why higher-value doctors should
+    receive more visits is a <i>derived conclusion</i>, not a management preference.</p>
+
+  <div class="step"><div class="sn">1</div><div>
+    <h4>Response to detailing is concave</h4>
+    <p>Empirical work consistently finds diminishing returns — the second call in a month produces
+    less incremental prescribing than the first. This underpins Lodish's <b>CALLPLAN</b> (1971) and
+    is confirmed econometrically by Manchanda, Rossi &amp; Chintagunta (2004).</p></div></div>
+
+  <div class="step"><div class="sn">2</div><div>
+    <h4>Formalising the allocation problem</h4>
+    <p>Let g<sub>d</sub>(f) be the response of doctor d to f calls per month, with g′ &gt; 0 and
+    g″ &lt; 0. Maximise total response subject to the capacity constraint, then form the
+    <b>Lagrangian</b> and take first-order conditions.</p></div></div>
+
+  <div class="fbox">maximise   Σ_d  g_d(f_d)      subject to   Σ_d f_d ≤ C
+
+ℒ = Σ g_d(f_d) − λ( Σ f_d − C )
+
+∂ℒ/∂f_d = 0   ⟹   <b>g′_d(f_d) = λ   for every funded doctor</b></div>
+
+  <div class="step"><div class="sn">3</div><div>
+    <h4>What the condition means</h4>
+    <p>At the optimum, the <b>marginal</b> return of the last call is equal across all doctors —
+    not the total return. Doctors with higher response elasticity therefore receive more calls,
+    until their marginal return falls to the common shadow price λ.</p></div></div>
+
+  <div class="step"><div class="sn">4</div><div>
+    <h4>Why this implies a tier ladder</h4>
+    <p>A four-tier frequency ladder is a <b>step-function approximation</b> of that continuous
+    optimum. The strategy is thus a defensible discretisation of a well-established
+    optimisation result.</p></div></div>
+
+  <figure>
+    <img src="assets/response.png" alt="Marginal return curves by tier">
+    <figcaption><b>Figure 5.</b> Marginal return per call by tier. The assigned frequencies
+      (3.5, 2.0, 1.0, 0.33) sit near a common marginal value λ — the optimality condition
+      derived above.</figcaption>
+  </figure>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <div class="eyebrow">Technique 3</div>
+  <h2>Makespan scheduling for territory design</h2>
+  <p class="lead">Territories must balance <i>workload</i>, not headcount — a territory heavy in
+    Platinum doctors must carry fewer doctors overall.</p>
+
+  <div class="fbox">minimise   max_j W_j     where   W_j = Σ_{d ∈ territory j} f_tier(d)</div>
+
+  <p>This is <b>multiprocessor scheduling</b> — partitioning jobs (doctors, with processing time
+  equal to visit frequency) across identical machines (representatives) to minimise the maximum
+  load. The problem is <b>NP-hard</b>, so a heuristic is required.</p>
+
+  <p>The model uses <b>Longest Processing Time first (LPT)</b>: sort doctors by workload
+  descending, then assign each to the least-loaded territory. Graham (1969) proved a worst-case
+  bound:</p>
+
+  <div class="fbox">LPT makespan  ≤  ( 4/3 − 1/(3m) ) × optimal
+with m = 6 territories  →  <b>1.278 × optimal</b>, typically far better</div>
+
+  <p>Balance is reported as the coefficient of variation of workload across territories.
+  Industry practice accepts CV ≤ 10%; the model achieves <b>1.8%</b>.</p>
+</div></section>
+
+<section><div class="wrap">
+  <div class="eyebrow">Technique 4</div>
+  <h2>Concentration analysis</h2>
+  <p class="lead">The one calculation capable of invalidating the entire approach — which is
+    precisely why it belongs in the analysis.</p>
+
+  <div class="fbox">G = 1 − Σ_k (X_k − X_{k−1})(Y_k + Y_{k−1})
+X = cumulative share of doctors · Y = cumulative share of total value</div>
+
+  <p>Rank all doctors by DVS ascending, then plot cumulative share of doctors against cumulative
+  share of value. Perfect equality is the 45° line; the Lorenz curve bows below it. G is twice
+  the area between them.</p>
+
+  <div class="note w"><b>Why this is the critical diagnostic.</b> G = 0 would mean every doctor is
+    equally valuable — in which case differentiated targeting would be <b>pointless and the
+    entire strategy unjustified</b>. Including this test, rather than quietly omitting it, is what
+    separates a model from an argument.</div>
+
+  <h3 style="margin-top:28px">Supporting theory</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Element</th><th>Source</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>Additive value function</td><td>Keeney &amp; Raiffa (1976)</td>
+        <td>The DVS formula and its validity condition</td></tr>
+      <tr><td>SMART rating technique</td><td>Edwards (1977)</td>
+        <td>Anchored 0–10 rubrics and direct weight allocation</td></tr>
+      <tr><td>Concave detailing response</td><td>Lodish (1971); Manchanda et al. (2004)</td>
+        <td>Derivation of the tiered visit ladder</td></tr>
+      <tr><td>Adopter categories</td><td>Rogers (2003)</td>
+        <td>Pillar 2 rubric; field-scoring calibration test</td></tr>
+      <tr><td>Diffusion model</td><td>Bass (1969); Sultan et al. (1990)</td>
+        <td>Testing the realism of the adoption ramp</td></tr>
+      <tr><td>Opinion-leader influence</td><td>Coleman, Katz &amp; Menzel (1966)</td>
+        <td>Pillar 3 and its operational definition</td></tr>
+      <tr><td>Contagion critique</td><td>Van den Bulte &amp; Lilien (2001)</td>
+        <td>Bounding the KOL multiplier honestly</td></tr>
+      <tr><td>LPT scheduling bound</td><td>Graham (1969)</td><td>Territory workload balancing</td></tr>
+      <tr><td>Concentration measurement</td><td>Gini (1912); Lorenz (1905)</td>
+        <td>Testing whether targeting is warranted</td></tr>
+      <tr><td>Compliance framework</td><td>UCPMP 2024 (Govt. of India)</td>
+        <td>Constraining what promotional spend may fund</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="next"><a href="model.html">← The Model</a><a href="results.html">Results →</a></div>
+</div></section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="fbrand">AI-Driven Precision Targeting</div>
+        <p class="fsm">A predictive model for doctor prioritization and resource
+        optimization in pharmaceutical sales. Every formula derived from first
+        principles; every figure independently verified.</p>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <a href="problem.html">The Problem</a>
+        <a href="model.html">The Model</a>
+        <a href="methods.html">Methods</a>
+        <a href="results.html">Results</a>
+      </div>
+      <div>
+        <h4>Materials</h4>
+        <a href="validation.html">Validation &amp; Audit</a>
+        <a href="resources.html">Downloads &amp; References</a>
+        <a href="app.html">Live Tool</a>
+        <a href="index.html#qr">QR Code</a>
+      </div>
+    </div>
+    <div class="fbot">
+      <div><b>Abhinav Kumar</b> · Principal Investigator</div>
+      <div>Multi-Attribute Utility Theory · Sales-Response Optimisation · LPT Scheduling</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('burger').onclick = function(){
+  document.getElementById('navlinks').classList.toggle('open');
+};
+</script>
+
+</body>
+</html>

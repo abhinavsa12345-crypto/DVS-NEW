@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Predictive Model — AI-Driven Precision Targeting for Pharmaceutical Sales</title>
+<meta name="description" content="AI-Driven Precision Targeting for Pharmaceutical Sales: A Predictive Model for Doctor Prioritization and Resource Optimization. A five-pillar predictive scoring model for prescriber prioritisation and field-resource allocation.">
+<meta name="author" content="Abhinav Kumar">
+<link rel="stylesheet" href="assets/style.css">
+
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="wrap navin">
+    <a class="brand" href="index.html">
+      <span class="bmark">AI</span>
+      <span class="btext">Precision Targeting<em>Pharmaceutical Sales Model</em></span>
+    </a>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="problem.html">The Problem</a>
+      <a href="model.html" class='on'>The Model</a>
+      <a href="methods.html">Methods</a>
+      <a href="results.html">Results</a>
+      <a href="validation.html">Validation</a>
+      <a href="resources.html">Resources</a>
+      <a class="cta" href="app.html">Launch Tool →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="ph">
+  <div class="wrap">
+    <div class="eyebrow">Section 02</div>
+    <h1>The Predictive Model</h1>
+    <p class="phsub">A five-pillar composite index that converts doctor attributes into a single, rankable measure of expected commercial value.</p>
+  </div>
+</header>
+
+<main id="main">
+
+<section><div class="wrap">
+  <h2>A composite predictive index</h2>
+  <p class="lead">Every doctor is evaluated on five dimensions simultaneously and combined into
+    a single Doctor Value Score. The weights reflect how directly each dimension determines
+    realised prescriptions, discounted by how reliably it can be measured.</p>
+
+  <div class="formula">
+    <div class="f">DVS = Σ wᵢ · sᵢ</div>
+    <div class="f" style="font-size:16px;color:#b8c9e4">= (P₁×0.30)+(P₂×0.25)+(P₃×0.20)+(P₄×0.15)+(P₅×0.10)</div>
+    <div class="n">subject to Σ wᵢ = 1, wᵢ &gt; 0, sᵢ ∈ [0,10]</div>
+  </div>
+
+  <h3 style="margin-top:30px">The five pillars</h3>
+
+  <div class="pillar">
+    <div class="ic" style="background:#2f6fd0">P₁</div>
+    <div><h4>Prescription Potential</h4>
+      <p>Relevant patients per month — scored on the <b>target condition</b>, not total footfall.
+      A dermatologist seeing 100 patients daily scores zero for a cardiology molecule.</p></div>
+    <div class="wt">30%<em>weight</em></div></div>
+
+  <div class="pillar">
+    <div class="ic" style="background:#0f7a66">P₂</div>
+    <div><h4>Adoption Propensity</h4>
+      <p>Willingness to try a new molecule <b>within the launch window</b>. Grounded in Rogers'
+      adopter categories: early adopter, early majority, late majority, laggard.</p></div>
+    <div class="wt">25%<em>weight</em></div></div>
+
+  <div class="pillar">
+    <div class="ic" style="background:#c8901a">P₃</div>
+    <div><h4>Influence &amp; Network Power</h4>
+      <p>Whether the doctor shapes peers' prescribing. Operationally defined by peer nomination
+      and referral counts rather than job title.</p></div>
+    <div class="wt">20%<em>weight</em></div></div>
+
+  <div class="pillar">
+    <div class="ic" style="background:#7a5fb0">P₄</div>
+    <div><h4>Accessibility</h4>
+      <p>Whether the doctor can realistically be met. A low score triggers a <b>change of
+      channel</b> — senior manager, peer-to-peer, digital — rather than disqualification.</p></div>
+    <div class="wt">15%<em>weight</em></div></div>
+
+  <div class="pillar">
+    <div class="ic" style="background:#b31b1b">P₅</div>
+    <div><h4>Competitive Vulnerability</h4>
+      <p>Whether a competitor's hold can be broken. Lowest weight because it is the most volatile
+      and least reliably observed variable.</p></div>
+    <div class="wt">10%<em>weight</em></div></div>
+
+  <figure>
+    <img src="assets/pillars.png" alt="Pillar weight donut chart">
+    <figcaption><b>Figure 2.</b> The weighting is deliberately top-heavy. Prescription Potential
+      and Adoption Propensity together carry 55% — the two dimensions that determine whether
+      prescriptions actually materialise inside a six-month launch window.</figcaption>
+  </figure>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <h2>Scoring rubrics</h2>
+  <p class="lead">Each pillar uses anchored descriptors so that two representatives scoring the
+    same doctor arrive at the same number. This is what makes the index reproducible.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Score</th><th>P₁ Prescription Potential</th><th>P₂ Adoption Propensity</th></tr></thead>
+    <tbody>
+      <tr><td class="n"><b>10</b></td><td>80+ relevant patients / month</td>
+        <td>Early adopter — tries new molecules within 3 months</td></tr>
+      <tr><td class="n"><b>8 / 7</b></td><td>50–79 relevant patients</td>
+        <td>Early majority — adopts after peer evidence (3–6 months)</td></tr>
+      <tr><td class="n"><b>6 / 4</b></td><td>30–49 relevant patients</td>
+        <td>Late majority — waits until well established (6–12 months)</td></tr>
+      <tr><td class="n"><b>4 / 2</b></td><td>15–29 relevant patients</td>
+        <td>Laggard / loyalist — almost never switches brand</td></tr>
+      <tr><td class="n"><b>2</b></td><td>Below 15 relevant patients</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Score</th><th>P₃ Influence</th><th>P₄ Accessibility</th><th>P₅ Competitive</th></tr></thead>
+    <tbody>
+      <tr><td class="n"><b>10</b></td><td>Regional / national KOL, professor</td>
+        <td>Easily accessible, gives adequate time</td><td>Actively seeking alternatives</td></tr>
+      <tr><td class="n"><b>7</b></td><td>Local influencer, conference speaker</td>
+        <td>Moderately accessible at set times</td><td>Open to a better option</td></tr>
+      <tr><td class="n"><b>5 / 4</b></td><td>Moderate peer influence</td>
+        <td>Difficult but reachable by other channels</td><td>Strong competitor, not locked in</td></tr>
+      <tr><td class="n"><b>2 / 1</b></td><td>Solo practitioner, limited network</td>
+        <td>Virtually inaccessible</td><td>Competitor champion</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Worked example</h2>
+  <p class="lead">Dr. Rajesh Kumar, Cardiologist — 55 relevant cardiac patients per month, a known
+    early adopter who has tried three new brands in two years, a local conference speaker,
+    available before OPD hours, currently using a competitor brand but open to alternatives.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Pillar</th><th class="n">Score</th><th class="n">Weight</th><th class="n">Contribution</th></tr></thead>
+    <tbody>
+      <tr><td>Prescription Potential</td><td class="n">8</td><td class="n">0.30</td><td class="n">2.40</td></tr>
+      <tr><td>Adoption Propensity</td><td class="n">9</td><td class="n">0.25</td><td class="n">2.25</td></tr>
+      <tr><td>Influence &amp; Network Power</td><td class="n">7</td><td class="n">0.20</td><td class="n">1.40</td></tr>
+      <tr><td>Accessibility</td><td class="n">8</td><td class="n">0.15</td><td class="n">1.20</td></tr>
+      <tr><td>Competitive Vulnerability</td><td class="n">6</td><td class="n">0.10</td><td class="n">0.60</td></tr>
+      <tr><td><b>Composite DVS</b></td><td class="n"></td><td class="n"><b>1.00</b></td>
+        <td class="n"><b>7.85</b></td></tr>
+    </tbody>
+  </table></div>
+  <p>DVS = 7.85 falls in the band [6.0, 8.0) and classifies as <span class="pill gd">GOLD</span> —
+  2 visits per month, ₹6,222 per quarter. The doctor sits 0.15 points below the Platinum threshold
+  and is flagged for review at the next recalibration.</p>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <h2>Segmentation into four tiers</h2>
+  <p class="lead">Scores band into four operational tiers, each mapping to a distinct engagement
+    mode: intensive personal, regular personal, periodic personal, and digital-only.</p>
+
+  <figure>
+    <img src="assets/pyramid.png" alt="Four-tier targeting pyramid">
+    <figcaption><b>Figure 3.</b> Engagement intensity rises toward the apex while population share
+      falls — the concentration on which the entire strategy depends.</figcaption>
+  </figure>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tier</th><th>DVS band</th><th class="n">Doctors</th><th class="n">Share</th>
+      <th class="n">Visits / month</th><th class="n">Budget / quarter</th><th>Engagement mode</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill pl">PLATINUM</span></td><td>8.0 – 10.0</td><td class="n">65</td>
+        <td class="n">12%</td><td class="n">3.5</td><td class="n"><b>₹20,770</b></td>
+        <td>Personal detailing + KOL programme</td></tr>
+      <tr><td><span class="pill gd">GOLD</span></td><td>6.0 – 7.9</td><td class="n">135</td>
+        <td class="n">25%</td><td class="n">2.0</td><td class="n">₹6,222</td>
+        <td>Regular detailing + group CME</td></tr>
+      <tr><td><span class="pill sv">SILVER</span></td><td>4.0 – 5.9</td><td class="n">180</td>
+        <td class="n">28%</td><td class="n">1.0</td><td class="n">₹2,500</td>
+        <td>Periodic reminder + digital</td></tr>
+      <tr><td><span class="pill bz">BRONZE</span></td><td>below 4.0</td><td class="n">220</td>
+        <td class="n">34%</td><td class="n">0.33</td><td class="n">₹1,636</td>
+        <td>Digital only; visit on interest signal</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note t"><b>Half-open intervals.</b> Bands are implemented as [lo, hi) so that every
+    possible score falls into exactly one tier. Written as “6.0–7.9” and “8.0–10.0”, a score of
+    7.95 would belong to no tier — and because the weight vector against integer scores generates
+    values on a 0.05 lattice, such scores are genuinely attainable.</div>
+
+  <div class="next"><a href="problem.html">← The Problem</a><a href="methods.html">Methods →</a></div>
+</div></section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="fbrand">AI-Driven Precision Targeting</div>
+        <p class="fsm">A predictive model for doctor prioritization and resource
+        optimization in pharmaceutical sales. Every formula derived from first
+        principles; every figure independently verified.</p>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <a href="problem.html">The Problem</a>
+        <a href="model.html">The Model</a>
+        <a href="methods.html">Methods</a>
+        <a href="results.html">Results</a>
+      </div>
+      <div>
+        <h4>Materials</h4>
+        <a href="validation.html">Validation &amp; Audit</a>
+        <a href="resources.html">Downloads &amp; References</a>
+        <a href="app.html">Live Tool</a>
+        <a href="index.html#qr">QR Code</a>
+      </div>
+    </div>
+    <div class="fbot">
+      <div><b>Abhinav Kumar</b> · Principal Investigator</div>
+      <div>Multi-Attribute Utility Theory · Sales-Response Optimisation · LPT Scheduling</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('burger').onclick = function(){
+  document.getElementById('navlinks').classList.toggle('open');
+};
+</script>
+
+</body>
+</html>
